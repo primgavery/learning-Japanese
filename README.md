@@ -62,8 +62,14 @@ python3 -m http.server 8080
 
 A separate, more arcade-y way to practice the same content. Cast a line into
 the pond; fish swim across tagged with a number, counter, or time (e.g. a
-fish labeled "3匹"). Type the reading before it swims off to reel it in.
+fish labeled "3匹"). Pick (or type) the reading before it swims off to reel
+it in.
 
+- **Multiple choice by default** — recognizing the right reading among a
+  few options is a much fairer ask than free recall when you don't know it
+  yet; a wrong pick highlights the correct one immediately (and reveals it
+  right on the fish) rather than leaving you guessing blind. Typing it out
+  is there as an opt-in once you're ready for the extra challenge.
 - **Rarity mirrors real-world usefulness, inverted for challenge** — common
   counters (つ, 人...) show up constantly as easy, low-value "common" fish so
   you get lots of low-stakes reps on what matters most in real life; rare

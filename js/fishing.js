@@ -66,6 +66,10 @@ const FishingState = {
   fishes: [],
   selectedId: null,
   nextFishId: 1,
+  // On by default: recognizing the right reading among choices is a much
+  // more realistic ask for someone who hasn't learned it yet than free
+  // recall. Typing it out is there for once you're ready for the challenge.
+  multipleChoice: true,
 
   load() {
     try {
@@ -75,6 +79,7 @@ const FishingState = {
       if (saved.collection) this.collection = saved.collection;
       if (typeof saved.totalCaught === 'number') this.totalCaught = saved.totalCaught;
       if (typeof saved.bestCombo === 'number') this.bestCombo = saved.bestCombo;
+      if (typeof saved.multipleChoice === 'boolean') this.multipleChoice = saved.multipleChoice;
     } catch (e) {
       /* ignore corrupt storage */
     }
@@ -89,6 +94,7 @@ const FishingState = {
         collection: this.collection,
         totalCaught: this.totalCaught,
         bestCombo: this.bestCombo,
+        multipleChoice: this.multipleChoice,
       })
     );
   },
@@ -129,31 +135,19 @@ function buildFishQuestion(spec) {
     const n = Math.floor(Math.random() * 100) + 1;
     const reading = numberToReading(n);
     return {
-      promptText: n.toLocaleString('en-US'),
+      kind: 'number',
+      promptKanji: n.toLocaleString('en-US'),
       accepted: [normalize(reading.romaji)],
       acceptedHiragana: [reading.hiragana],
       romaji: reading.romaji,
       hiragana: reading.hiragana,
     };
   }
-  if (spec.kind === 'clock') {
-    const q = Game.buildTimeQuestion();
-    return {
-      promptText: q.promptKanji,
-      accepted: q.accepted,
-      acceptedHiragana: q.acceptedHiragana,
-      romaji: q.romaji,
-      hiragana: q.hiragana,
-    };
-  }
-  const q = Game.buildCounterQuestionFor(spec.counter);
-  return {
-    promptText: q.promptKanji,
-    accepted: q.accepted,
-    acceptedHiragana: q.acceptedHiragana,
-    romaji: q.romaji,
-    hiragana: q.hiragana,
-  };
+  // Reuse the exact same question builders (and shape) as the quiz — this
+  // lets us reuse Game.buildChoices() below for fishing's multiple-choice
+  // mode instead of reinventing distractor logic.
+  if (spec.kind === 'clock') return Game.buildTimeQuestion();
+  return Game.buildCounterQuestionFor(spec.counter);
 }
 
 let spawnTimer = null;
@@ -174,6 +168,7 @@ function spawnFish() {
     coinValue: tierInfo.coins,
     swimSeconds,
     question,
+    choices: Game.buildChoices(question),
     direction: Math.random() < 0.5 ? 'ltr' : 'rtl',
     top: 10 + Math.random() * 65,
     caught: false,
@@ -213,7 +208,7 @@ function renderFish(fish) {
 
   div.innerHTML = `
     <div class="fish-hint" hidden></div>
-    <div class="fish-tag">${fish.question.promptText}</div>
+    <div class="fish-tag">${fish.question.promptKanji}</div>
     <div class="fish-timebar"><div class="fish-timebar-fill"></div></div>
     <div class="fish-emoji-wrap tier-${tierClass}"><span class="fish-emoji">${icon}</span></div>
   `;
@@ -232,11 +227,54 @@ function selectFish(id) {
   document.querySelectorAll('.fish').forEach((el) => {
     el.classList.toggle('selected', Number(el.dataset.id) === id);
   });
+  renderAnswerArea();
 }
 
 function selectAnyAvailable() {
   const next = FishingState.fishes[0];
   selectFish(next ? next.id : null);
+}
+
+function renderAnswerArea() {
+  const castForm = document.getElementById('cast-form');
+  const preview = document.getElementById('cast-hiragana-preview');
+  const grid = document.getElementById('fish-choice-grid');
+  const fish = FishingState.fishes.find((f) => f.id === FishingState.selectedId);
+
+  if (!fish || !FishingState.multipleChoice) {
+    castForm.hidden = false;
+    preview.hidden = false;
+    grid.hidden = true;
+    grid.innerHTML = '';
+    return;
+  }
+
+  castForm.hidden = true;
+  preview.hidden = true;
+  grid.hidden = false;
+  grid.innerHTML = fish.choices
+    .map((c) => `<button type="button" class="choice-btn" data-choice="${c}">${c}</button>`)
+    .join('');
+  grid.querySelectorAll('.choice-btn').forEach((btn) => {
+    btn.addEventListener('click', () => handleChoiceClick(fish, btn.dataset.choice, btn));
+  });
+}
+
+function handleChoiceClick(fish, choiceText, btnEl) {
+  if (fish.caught) return;
+
+  if (normalize(choiceText) === fish.question.accepted[0]) {
+    handleCatch(fish);
+    return;
+  }
+
+  revealAnswer(fish);
+  btnEl.disabled = true;
+  btnEl.classList.add('incorrect');
+  document.querySelectorAll('#fish-choice-grid .choice-btn').forEach((b) => {
+    if (normalize(b.dataset.choice) === fish.question.accepted[0]) b.classList.add('correct');
+  });
+  showMessage(`Not quite! The right one's highlighted — give it a click.`, 'bad');
 }
 
 function handleEscape(id) {
@@ -417,6 +455,14 @@ function initFishing() {
   updateStatsUI();
   renderShop();
   renderCollection();
+
+  const mcToggle = document.getElementById('fish-mc-toggle');
+  mcToggle.checked = FishingState.multipleChoice;
+  mcToggle.addEventListener('change', () => {
+    FishingState.multipleChoice = mcToggle.checked;
+    FishingState.save();
+    renderAnswerArea();
+  });
 
   document.getElementById('cast-form').addEventListener('submit', (e) => {
     e.preventDefault();
