@@ -79,6 +79,27 @@ function numberToReading(n) {
   return { romaji, hiragana, kanji: n.toLocaleString('en-US') };
 }
 
+// Explains *why* a number reads the way it does, if there's a sound change
+// involved (300/600/800, 3000/8000, needing "ichi" for 10,000...). Returns
+// null when the number is just straightforward digit-by-digit reading, so
+// callers can fall back to their own "nothing special here" message.
+function explainNumber(n) {
+  const notes = [];
+  const man = Math.floor(n / 10000);
+  const rest = n % 10000;
+  const th = Math.floor(rest / 1000);
+  const hu = Math.floor((rest % 1000) / 100);
+
+  if (hu === 3) notes.push('300s use さんびゃく — hyaku shifts to byaku after san.');
+  if (hu === 6) notes.push('600s use ろっぴゃく — hyaku doubles into ppyaku after roku.');
+  if (hu === 8) notes.push('800s use はっぴゃく — hyaku doubles into ppyaku after hachi.');
+  if (th === 3) notes.push('3000s use さんぜん — sen shifts to zen after san.');
+  if (th === 8) notes.push('8000s use はっせん — sen doubles into ssen after hachi.');
+  if (man === 1) notes.push('10,000 needs the explicit ichi (いちまん) — unlike hyaku/sen, man doesn’t drop it.');
+
+  return notes.length ? notes.join(' ') : null;
+}
+
 /* ------------------------------------------------------------------
    Counters (助数詞 josuushi)
    Each counter has readings for 1-10 as {romaji, hiragana}.
@@ -416,6 +437,50 @@ const COUNTERS = [
       { romaji: 'hachidai', hiragana: 'はちだい' },
       { romaji: 'kyuudai', hiragana: 'きゅうだい' },
       { romaji: 'juudai', hiragana: 'じゅうだい' },
+    ],
+  },
+  {
+    id: 'wa',
+    kanji: '羽',
+    label: '羽 (wa/ba/pa)',
+    meaning: 'birds (and, oddly, rabbits)',
+    icon: '🐦',
+    rank: 16,
+    sentence: 'There are {n} birds on the wire.',
+    note: 'Same w→b/p alternation family as 本/匹/杯: w→b after n (3), w→p after っ (6,10), stays w after vowels.',
+    readings: [
+      { romaji: 'ichiwa', hiragana: 'いちわ' },
+      { romaji: 'niwa', hiragana: 'にわ' },
+      { romaji: 'sanba', hiragana: 'さんば' },
+      { romaji: 'yonwa', hiragana: 'よんわ' },
+      { romaji: 'gowa', hiragana: 'ごわ' },
+      { romaji: 'roppa', hiragana: 'ろっぱ' },
+      { romaji: 'nanawa', hiragana: 'ななわ' },
+      { romaji: 'hachiwa', hiragana: 'はちわ' },
+      { romaji: 'kyuuwa', hiragana: 'きゅうわ' },
+      { romaji: 'juppa', hiragana: 'じゅっぱ' },
+    ],
+  },
+  {
+    id: 'soku',
+    kanji: '足',
+    label: '足 (soku)',
+    meaning: 'pairs of footwear (shoes, socks...)',
+    icon: '👟',
+    rank: 17,
+    sentence: 'I bought {n} pairs of socks.',
+    note: 'Gemination before s: 1, 8, 10 — same pattern as 冊/歳/回.',
+    readings: [
+      { romaji: 'issoku', hiragana: 'いっそく' },
+      { romaji: 'nisoku', hiragana: 'にそく' },
+      { romaji: 'sansoku', hiragana: 'さんそく' },
+      { romaji: 'yonsoku', hiragana: 'よんそく' },
+      { romaji: 'gosoku', hiragana: 'ごそく' },
+      { romaji: 'rokusoku', hiragana: 'ろくそく' },
+      { romaji: 'nanasoku', hiragana: 'ななそく' },
+      { romaji: 'hassoku', hiragana: 'はっそく' },
+      { romaji: 'kyuusoku', hiragana: 'きゅうそく' },
+      { romaji: 'jussoku', hiragana: 'じゅっそく' },
     ],
   },
 ];

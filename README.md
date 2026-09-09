@@ -60,20 +60,29 @@ python3 -m http.server 8080
 
 ### 🎣 Fishing mini-game
 
-A separate, more arcade-y way to practice the same content. Cast a line into
-the pond; fish swim across tagged with a number, counter, or time (e.g. a
-fish labeled "3匹"). Pick (or type) the reading before it swims off to reel
-it in.
+A separate, more arcade-y way to practice the same content, with two or
+more fish swimming at once by default. Cast a line into the pond; fish
+swim across tagged with a number, counter, or time (e.g. a fish labeled
+"3匹"). Pick (or type) the reading before it swims off to reel it in.
 
 - **Multiple choice by default** — recognizing the right reading among a
   few options is a much fairer ask than free recall when you don't know it
   yet. Typing it out is there as an opt-in once you're ready for the extra
   challenge.
-- **One guess per fish** — a wrong pick (or typed answer) loses that fish,
-  same as letting it escape; there's no clicking your way to a catch. It
-  still highlights the correct answer and reveals *why* it's correct (the
-  same sound-change note or irregular-hour explanation used elsewhere in
-  the app) before the fish is gone, so a miss is still a learning moment.
+- **"I don't know" is a real option** — say so instead of guessing, and
+  you'll get the same unhurried lesson a wrong guess gives, without a wrong
+  answer on the board.
+- **One guess per fish, with a real lesson, not just a reveal** — a wrong
+  pick (or "I don't know") freezes that fish in place and swaps in a lesson
+  card: the prompt, the correct reading, and a *tailored* explanation of
+  why (which sound-change rule applied here, or that this one's just a
+  straightforward reading with no rule to learn) — reusing the same notes
+  as the quiz and reference tabs, tied to the specific number/counter in
+  front of you. It only continues once you dismiss it, so there's no
+  missing it — and no clicking through choices to find the answer, since
+  the fish is already lost the moment you guess wrong.
+- **17 counters now, plus more fish variety** — added 羽 (wa/ba/pa, birds)
+  and 足 (soku, pairs of footwear) to the roster.
 - **Rarity mirrors real-world usefulness, inverted for challenge** — common
   counters (つ, 人...) show up constantly as easy, low-value "common" fish so
   you get lots of low-stakes reps on what matters most in real life; rare
@@ -83,8 +92,8 @@ it in.
   unbroken catch streak raises a combo multiplier; a miss or an escape
   resets the combo.
 - **Tackle shop** — spend coins on Better Bait (more swim time), a Bigger Net
-  (more fish on the line at once), and a Lucky Charm (better odds at rare
-  fish).
+  (more fish on the line at once, up to 5), and a Lucky Charm (better odds
+  at rare fish).
 - **Catch log** — a Pokédex-style collection grid: every counter (plus a
   rare "Clockfish" for time practice) is a species to discover; catching one
   for the first time reveals its meaning and sound-change note there.

@@ -704,6 +704,55 @@ select {
   to { opacity: 0; transform: translate(-50%, -40px); }
 }
 
+.dont-know-btn {
+  display: block;
+  margin: 0.6rem auto 0;
+  font-size: 0.82rem;
+}
+
+.lesson-card {
+  background: var(--accent2-soft);
+  border: 1px solid var(--accent2);
+  border-radius: var(--radius);
+  padding: 1.1rem;
+  margin-bottom: 0.75rem;
+  text-align: center;
+  animation: fade-up 0.2s ease;
+}
+
+.lesson-title {
+  font-weight: 700;
+  color: var(--accent2);
+  margin-bottom: 0.5rem;
+}
+
+.lesson-prompt {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 0.3rem;
+}
+
+.lesson-answer {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--accent2);
+  margin-bottom: 0.5rem;
+}
+
+.lesson-why {
+  font-size: 0.9rem;
+  color: var(--text);
+  max-width: 440px;
+  margin: 0 auto;
+}
+
+/* the fish being explained pauses in place — its swim/timer can't keep
+   running (or escape) while the lesson card has the floor */
+.fish.fish-frozen,
+.fish.fish-frozen .fish-timebar-fill {
+  animation-play-state: paused !important;
+}
+
 .fishing-message {
   min-height: 1.4em;
   font-size: 0.95rem;
