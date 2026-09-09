@@ -122,15 +122,21 @@
 
       <div class="panel">
         <p class="hint">
-          Cast your line and reel in fish tagged with a number, counter, or time. Type the
-          reading before a fish swims away to catch it. Rarer counters (the ones you don't see
-          every day) show up as rarer, more valuable fish — the common ones (つ, 人...) bite
+          Cast your line and reel in fish tagged with a number, counter, or time. Pick the
+          correct reading before a fish swims away to catch it — don't worry if you don't know
+          one yet, that's what the choices are for. Rarer counters (the ones you don't see every
+          day) show up as rarer, more valuable fish — the common ones (つ, 人...) bite
           constantly so you get plenty of easy practice on what matters most.
         </p>
+        <label class="switch">
+          <input type="checkbox" id="fish-mc-toggle" checked />
+          <span>Multiple choice (recommended while you're still learning readings)</span>
+        </label>
       </div>
 
       <div class="panel pond-panel">
         <div class="pond" id="pond"></div>
+        <div class="choice-grid" id="fish-choice-grid" hidden></div>
         <form id="cast-form" class="answer-form">
           <input
             type="text"
