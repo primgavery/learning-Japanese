@@ -48,7 +48,7 @@ const FISH_SPECIES = [
 
 const UPGRADE_DEFS = {
   bait: { label: 'Better Bait', icon: '🪱', desc: '+3s swim time for every fish', max: 3, baseCost: 20 },
-  net: { label: 'Bigger Net', icon: '🥅', desc: '+1 fish on the line at once', max: 2, baseCost: 40 },
+  net: { label: 'Bigger Net', icon: '🥅', desc: '+1 fish on the line at once', max: 3, baseCost: 40 },
   charm: { label: 'Lucky Charm', icon: '🍀', desc: 'Rare & epic fish bite more often', max: 3, baseCost: 30 },
 };
 
@@ -100,7 +100,9 @@ const FishingState = {
   },
 
   maxConcurrent() {
-    return 1 + this.upgrades.net;
+    // Starts at 2 so it feels like a game with things happening, not a
+    // single lane — upgrades push it further for those who want busier.
+    return 2 + this.upgrades.net;
   },
 
   swimBonus() {
@@ -148,6 +150,24 @@ function buildFishQuestion(spec) {
   // mode instead of reinventing distractor logic.
   if (spec.kind === 'clock') return Game.buildTimeQuestion();
   return Game.buildCounterQuestionFor(spec.counter);
+}
+
+// A real "why", not just "what" — reuses the same sound-change notes shown
+// elsewhere in the app, but ties them to the specific number/count in front
+// of you rather than just restating the general rule in isolation.
+function buildLesson(q) {
+  if (q.kind === 'counter') {
+    const c = q.counter;
+    if (q.count === 20) {
+      return `20 is special: はたち (hatachi) is its own irregular word here, not built from a number + counter like the rest of this pattern.`;
+    }
+    return `${c.note} Here: ${q.count} + ${c.kanji} (${c.meaning}) → ${q.romaji}.`;
+  }
+  if (q.kind === 'time') {
+    return q.explanation || 'This just combines the hour and minute readings directly — no irregularity to watch for here.';
+  }
+  const n = parseInt(q.promptKanji.replace(/,/g, ''), 10);
+  return explainNumber(n) || "This one's just the digits read straight through — no special sound change here.";
 }
 
 let spawnTimer = null;
@@ -222,7 +242,12 @@ function renderFish(fish) {
   pond.appendChild(div);
 }
 
+// Set while a lesson card is up, so the game doesn't let you wander off to
+// another fish (or silently swap the answer area under it) mid-explanation.
+let lessonFish = null;
+
 function selectFish(id) {
+  if (lessonFish) return; // finish the current lesson first
   FishingState.selectedId = id;
   document.querySelectorAll('.fish').forEach((el) => {
     el.classList.toggle('selected', Number(el.dataset.id) === id);
@@ -236,10 +261,15 @@ function selectAnyAvailable() {
 }
 
 function renderAnswerArea() {
+  if (lessonFish) return; // the lesson card owns the answer area right now
+
   const castForm = document.getElementById('cast-form');
   const preview = document.getElementById('cast-hiragana-preview');
   const grid = document.getElementById('fish-choice-grid');
+  const dontKnowBtn = document.getElementById('dont-know-btn');
   const fish = FishingState.fishes.find((f) => f.id === FishingState.selectedId);
+
+  dontKnowBtn.hidden = !fish;
 
   if (!fish || !FishingState.multipleChoice) {
     castForm.hidden = false;
@@ -260,6 +290,35 @@ function renderAnswerArea() {
   });
 }
 
+// Freezes the fish's swim (so it can't also escape while the lesson is up),
+// fills in the lesson card with the prompt/answer/why, and swaps the whole
+// answer area over to it. Dismissed only by the player clicking through —
+// no auto-timeout, so there's no way to miss the explanation.
+function showLesson(fish) {
+  lessonFish = fish;
+  const el = fishEl(fish.id);
+  if (el) el.classList.add('fish-frozen');
+  revealAnswer(fish);
+
+  document.getElementById('lesson-prompt').textContent = fish.question.promptKanji;
+  document.getElementById('lesson-answer').textContent = `${fish.question.romaji} (${fish.question.hiragana})`;
+  document.getElementById('lesson-why').textContent = buildLesson(fish.question);
+
+  document.getElementById('cast-form').hidden = true;
+  document.getElementById('cast-hiragana-preview').hidden = true;
+  document.getElementById('fish-choice-grid').hidden = true;
+  document.getElementById('dont-know-btn').hidden = true;
+  document.getElementById('lesson-card').hidden = false;
+}
+
+function dismissLesson() {
+  if (!lessonFish) return;
+  const fish = lessonFish;
+  lessonFish = null;
+  document.getElementById('lesson-card').hidden = true;
+  handleMiss(fish);
+}
+
 function handleChoiceClick(fish, choiceText, btnEl) {
   if (fish.caught || fish.locked) return;
 
@@ -270,21 +329,35 @@ function handleChoiceClick(fish, choiceText, btnEl) {
 
   // One guess — a wrong pick loses the fish, same as letting it escape.
   // Lock it immediately (so its swim animation can't also trigger an
-  // escape mid-reveal) and highlight what was right and why before it's
-  // gone, so the mistake is still worth something — but there's no
-  // clicking your way to a catch.
+  // escape mid-reveal), flash which one was right, then hand off to the
+  // full lesson card — no clicking your way to a catch.
   fish.locked = true;
-  revealAnswer(fish);
   btnEl.classList.add('incorrect');
   document.querySelectorAll('#fish-choice-grid .choice-btn').forEach((b) => {
     b.disabled = true;
     if (normalize(b.dataset.choice) === fish.question.accepted[0]) b.classList.add('correct');
   });
-  setTimeout(() => handleMiss(fish), 1100);
+  setTimeout(() => showLesson(fish), 700);
 }
 
-// A wrong guess (typed or picked) loses the fish outright — you don't get
-// to try again once you've guessed wrong, only the reveal + explanation.
+function handleDontKnow() {
+  const fish = FishingState.fishes.find((f) => f.id === FishingState.selectedId);
+  if (!fish || fish.caught || fish.locked) return;
+  fish.locked = true;
+
+  if (FishingState.multipleChoice) {
+    document.querySelectorAll('#fish-choice-grid .choice-btn').forEach((b) => {
+      b.disabled = true;
+      if (normalize(b.dataset.choice) === fish.question.accepted[0]) b.classList.add('correct');
+    });
+    setTimeout(() => showLesson(fish), 400);
+  } else {
+    showLesson(fish);
+  }
+}
+
+// A wrong guess (typed, picked, or "I don't know") loses the fish outright
+// — you don't get to try again, only the lesson you just saw.
 function handleMiss(fish) {
   if (fish.caught) return;
 
@@ -292,14 +365,14 @@ function handleMiss(fish) {
   if (idx !== -1) FishingState.fishes.splice(idx, 1);
   const el = fishEl(fish.id);
   if (el) {
+    el.classList.remove('fish-frozen');
     el.style.animation = 'none';
     el.classList.add('missed');
     setTimeout(() => el.remove(), 500);
   }
 
   FishingState.combo = 0;
-  const why = fish.question.explanation ? ` 💡 ${fish.question.explanation}` : '';
-  showMessage(`✗ Not this one — it's "${fish.question.romaji}" (${fish.question.hiragana}).${why}`, 'bad');
+  showMessage('Ready for the next one — you got this!', 'muted');
 
   if (FishingState.selectedId === fish.id) selectAnyAvailable();
   updateStatsUI();
@@ -467,7 +540,13 @@ function pauseFishing() {
 }
 
 function resumeFishing() {
-  if (!spawnTimer) spawnTimer = setInterval(attemptSpawn, 1400);
+  if (!spawnTimer) {
+    // Fill the pond right away instead of trickling in one fish per tick —
+    // with multiple fish now the default, the game should feel busy the
+    // moment you open the tab, not a few seconds later.
+    while (FishingState.fishes.length < FishingState.maxConcurrent()) spawnFish();
+    spawnTimer = setInterval(attemptSpawn, 1400);
+  }
   document.getElementById('pond').classList.remove('paused');
 }
 
@@ -512,20 +591,19 @@ function initFishing() {
       updateCastPreview();
     } else {
       // One guess — same rule as multiple-choice mode: a wrong answer
-      // loses the fish, but reveals the reading and why before it's gone.
+      // loses the fish, and hands off to the full lesson card.
       fish.locked = true;
-      revealAnswer(fish);
-      input.disabled = true;
       shakeCastInput();
       setTimeout(() => {
-        handleMiss(fish);
+        showLesson(fish);
         input.value = '';
-        input.disabled = false;
         updateCastPreview();
-      }, 1100);
+      }, 500);
     }
   });
   document.getElementById('cast-input').addEventListener('input', updateCastPreview);
+  document.getElementById('dont-know-btn').addEventListener('click', handleDontKnow);
+  document.getElementById('lesson-next-btn').addEventListener('click', dismissLesson);
 
   document.querySelectorAll('.tab-btn').forEach((btn) => {
     btn.addEventListener('click', () => {

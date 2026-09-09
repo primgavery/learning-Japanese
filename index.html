@@ -123,10 +123,11 @@
       <div class="panel">
         <p class="hint">
           Cast your line and reel in fish tagged with a number, counter, or time. Pick the
-          correct reading before a fish swims away to catch it — don't worry if you don't know
-          one yet, that's what the choices are for. Rarer counters (the ones you don't see every
-          day) show up as rarer, more valuable fish — the common ones (つ, 人...) bite
-          constantly so you get plenty of easy practice on what matters most.
+          correct reading before a fish swims away to catch it — and if you don't know one,
+          just say so and you'll get a quick lesson instead of a guess. Rarer counters (the
+          ones you don't see every day) show up as rarer, more valuable fish — the common
+          ones (つ, 人...) bite constantly so you get plenty of easy practice on what matters
+          most.
         </p>
         <label class="switch">
           <input type="checkbox" id="fish-mc-toggle" checked />
@@ -136,6 +137,15 @@
 
       <div class="panel pond-panel">
         <div class="pond" id="pond"></div>
+
+        <div class="lesson-card" id="lesson-card" hidden>
+          <div class="lesson-title">📖 Let's learn this one</div>
+          <div class="lesson-prompt" id="lesson-prompt"></div>
+          <div class="lesson-answer" id="lesson-answer"></div>
+          <div class="lesson-why" id="lesson-why"></div>
+          <button type="button" class="primary-btn" id="lesson-next-btn">Got it — next fish →</button>
+        </div>
+
         <div class="choice-grid" id="fish-choice-grid" hidden></div>
         <form id="cast-form" class="answer-form">
           <input
@@ -149,6 +159,7 @@
           <button type="submit" id="cast-btn">Reel in!</button>
         </form>
         <div class="hiragana-preview" id="cast-hiragana-preview">&nbsp;</div>
+        <button type="button" id="dont-know-btn" class="link-btn dont-know-btn" hidden>🤷 I don't know this one — show me</button>
         <div class="fishing-message" id="fishing-message">&nbsp;</div>
       </div>
 
