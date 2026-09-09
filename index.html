@@ -29,9 +29,10 @@
         <div class="settings-row">
           <label class="settings-label">Mode</label>
           <div class="segmented" id="mode-select">
-            <button data-mode="numbers" class="active">Numbers</button>
-            <button data-mode="counters">Counters</button>
-            <button data-mode="mixed">Mixed</button>
+            <button data-mode="numbers" class="active">🔢 Numbers</button>
+            <button data-mode="counters">📦 Counters</button>
+            <button data-mode="time">🕒 Time</button>
+            <button data-mode="mixed">🎲 Mixed</button>
           </div>
         </div>
 
@@ -47,7 +48,7 @@
         </div>
 
         <div class="settings-row" id="counter-select-row">
-          <label class="settings-label">Counters to practice</label>
+          <label class="settings-label">Counters to practice <span class="hint">(sorted by how common they are)</span></label>
           <div class="counter-chip-list" id="counter-chip-list"></div>
           <div class="chip-actions">
             <button id="counters-all" class="link-btn">Select all</button>
@@ -55,11 +56,24 @@
           </div>
         </div>
 
-        <div class="settings-row">
-          <label class="settings-label" for="mc-toggle">Answer style</label>
+        <div class="settings-row toggle-row" id="prioritize-row">
+          <label class="switch">
+            <input type="checkbox" id="prioritize-toggle" checked />
+            <span>Practice common counters more often</span>
+          </label>
+        </div>
+
+        <div class="settings-row toggle-row">
+          <label class="switch">
+            <input type="checkbox" id="sentence-toggle" checked />
+            <span>Show a little example sentence with each question</span>
+          </label>
+        </div>
+
+        <div class="settings-row toggle-row">
           <label class="switch">
             <input type="checkbox" id="mc-toggle" />
-            <span>Multiple choice (off = type the romaji)</span>
+            <span>Multiple choice (off = type the reading yourself)</span>
           </label>
         </div>
       </div>
@@ -68,6 +82,7 @@
         <div class="quiz-icon" id="quiz-icon">🔢</div>
         <div class="quiz-prompt" id="quiz-prompt">—</div>
         <div class="quiz-sublabel" id="quiz-sublabel"></div>
+        <div class="quiz-sentence" id="quiz-sentence"></div>
 
         <form id="answer-form" class="answer-form">
           <input
@@ -80,6 +95,7 @@
           />
           <button type="submit" id="submit-btn">Check</button>
         </form>
+        <div class="hiragana-preview" id="hiragana-preview" aria-hidden="true">&nbsp;</div>
 
         <div class="choice-grid" id="choice-grid" hidden></div>
 
@@ -107,10 +123,10 @@
           <tbody id="digit-ref"></tbody>
         </table>
         <p class="hint">
-          Sound changes to memorize: <strong>300 = さんびゃく</strong> (not さんひゃく),
-          <strong>600 = ろっぴゃく</strong>, <strong>800 = はっぴゃく</strong>,
-          <strong>1000 = いっせん</strong>, <strong>3000 = さんぜん</strong>,
-          <strong>8000 = はっせん</strong>.
+          Sound changes to memorize: <strong>100 = ひゃく</strong> (not いちひゃく),
+          <strong>300 = さんびゃく</strong> (not さんひゃく), <strong>600 = ろっぴゃく</strong>,
+          <strong>800 = はっぴゃく</strong>, <strong>1000 = せん</strong> (not いっせん),
+          <strong>3000 = さんぜん</strong>, <strong>8000 = はっせん</strong>.
         </p>
       </div>
 
@@ -119,9 +135,26 @@
         <p class="hint">
           Japanese uses different counting words depending on what you're counting — this is
           the part that trips up Spanish/English speakers, since neither language does this.
-          Each card below shows the full 1–10 pattern and the sound-change rule behind it.
+          Cards are sorted by how often you'll actually need them —
+          <strong>つ and 人</strong> are the two to overlearn first, since between "generic
+          object" and "person" they cover most everyday counting.
+          Each card shows the full 1–10 pattern and the sound-change rule behind it.
         </p>
         <div id="counter-reference"></div>
+      </div>
+
+      <div class="panel">
+        <h2>Telling time (何時何分)</h2>
+        <p class="hint">
+          Hours have their own irregulars: <strong>4時 = よじ</strong> (not yonji),
+          <strong>7時 = しちじ</strong> (not nanaji), <strong>9時 = くじ</strong> (not
+          kyuuji). Minutes reuse the 分 pattern above. For :30, はん (han, "half") is more
+          natural than saying さんじゅっぷん.
+        </p>
+        <table class="ref-table">
+          <thead><tr><th>Hour</th><th>Reading</th><th>Hiragana</th></tr></thead>
+          <tbody id="hour-ref"></tbody>
+        </table>
       </div>
     </section>
   </main>
@@ -130,6 +163,7 @@
     <p>Built for learning Japanese numbers &amp; counters. Progress is saved locally in your browser.</p>
   </footer>
 
+  <script src="js/romaji.js"></script>
   <script src="js/data.js"></script>
   <script src="js/game.js"></script>
   <script src="js/main.js"></script>

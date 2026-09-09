@@ -2,17 +2,28 @@
    Japanese number reading generator (0 - 99,999)
    Builds both romaji and hiragana readings using the same rules
    native speakers use, including the sound changes (音便) that make
-   this hard for learners: 300=さんびゃく, 600=ろっぴゃく, 800=はっぴゃく,
-   1000=いっせん, 3000=さんぜん, 8000=はっせん, etc.
+   this hard for learners: 100=ひゃく (not いちひゃく), 300=さんびゃく, 600=ろっぴゃく,
+   800=はっぴゃく, 1000=せん (not いっせん), 3000=さんぜん, 8000=はっせん, etc.
 ------------------------------------------------------------------- */
 
 const DIGIT_R = ['', 'ichi', 'ni', 'san', 'yon', 'go', 'roku', 'nana', 'hachi', 'kyuu'];
 const DIGIT_H = ['', 'いち', 'に', 'さん', 'よん', 'ご', 'ろく', 'なな', 'はち', 'きゅう'];
 
+// Joins two romaji chunks, inserting the standard disambiguating apostrophe
+// (as in "tan'i") when a trailing ん could otherwise be misread as merging
+// with a following vowel/y — e.g. "sen"+"ichi" must stay "sen'ichi" (せんいち),
+// not read as "se"+"ni"+"chi". Hiragana never has this ambiguity, so it's
+// romaji-only.
+function joinR(left, right) {
+  if (left && /n$/.test(left) && /^[aiueoy]/.test(right)) return left + "'" + right;
+  return left + right;
+}
+
 function readThousandsBlock(n, R) {
   // n is 0-9999, R = true for romaji, false for hiragana
   const D = R ? DIGIT_R : DIGIT_H;
   const juu = R ? 'juu' : 'じゅう';
+  const join = R ? joinR : (a, b) => a + b;
   let out = '';
 
   const th = Math.floor(n / 1000);
@@ -21,23 +32,23 @@ function readThousandsBlock(n, R) {
   const on = n % 10;
 
   if (th > 0) {
-    if (th === 1) out += R ? 'sen' : 'せん';
-    else if (th === 3) out += R ? 'sanzen' : 'さんぜん';
-    else if (th === 8) out += R ? 'hassen' : 'はっせん';
-    else out += D[th] + (R ? 'sen' : 'せん');
+    if (th === 1) out = join(out, R ? 'sen' : 'せん');
+    else if (th === 3) out = join(out, R ? 'sanzen' : 'さんぜん');
+    else if (th === 8) out = join(out, R ? 'hassen' : 'はっせん');
+    else out = join(out, D[th] + (R ? 'sen' : 'せん'));
   }
   if (hu > 0) {
-    if (hu === 1) out += R ? 'hyaku' : 'ひゃく';
-    else if (hu === 3) out += R ? 'sanbyaku' : 'さんびゃく';
-    else if (hu === 6) out += R ? 'roppyaku' : 'ろっぴゃく';
-    else if (hu === 8) out += R ? 'happyaku' : 'はっぴゃく';
-    else out += D[hu] + (R ? 'hyaku' : 'ひゃく');
+    if (hu === 1) out = join(out, R ? 'hyaku' : 'ひゃく');
+    else if (hu === 3) out = join(out, R ? 'sanbyaku' : 'さんびゃく');
+    else if (hu === 6) out = join(out, R ? 'roppyaku' : 'ろっぴゃく');
+    else if (hu === 8) out = join(out, R ? 'happyaku' : 'はっぴゃく');
+    else out = join(out, D[hu] + (R ? 'hyaku' : 'ひゃく'));
   }
   if (te > 0) {
-    if (te === 1) out += juu;
-    else out += D[te] + juu;
+    if (te === 1) out = join(out, juu);
+    else out = join(out, D[te] + juu);
   }
-  if (on > 0) out += D[on];
+  if (on > 0) out = join(out, D[on]);
 
   return out;
 }
@@ -53,15 +64,15 @@ function numberToReading(n) {
 
   if (man > 0) {
     if (man === 1) {
-      romaji += 'ichiman';
+      romaji = joinR(romaji, 'ichiman');
       hiragana += 'いちまん';
     } else {
-      romaji += readThousandsBlock(man, true) + 'man';
+      romaji = joinR(romaji, readThousandsBlock(man, true) + 'man');
       hiragana += readThousandsBlock(man, false) + 'まん';
     }
   }
   if (rest > 0) {
-    romaji += readThousandsBlock(rest, true);
+    romaji = joinR(romaji, readThousandsBlock(rest, true));
     hiragana += readThousandsBlock(rest, false);
   }
 
@@ -82,6 +93,8 @@ const COUNTERS = [
     label: 'つ (tsu)',
     meaning: 'general objects (native Japanese numbers) — use when no specific counter fits',
     icon: '🔘',
+    rank: 1,
+    sentence: 'Could I get {n} of these, please?',
     note: 'Uses the old native Japanese number series, not the Sino-Japanese one. Irregular all the way through.',
     readings: [
       { romaji: 'hitotsu', hiragana: 'ひとつ' },
@@ -102,6 +115,8 @@ const COUNTERS = [
     label: '人 (nin)',
     meaning: 'people',
     icon: '🧑',
+    rank: 2,
+    sentence: 'There are {n} people in my family.',
     note: '1 and 2 are totally irregular words (hitori/futari). From 3 on it is X+nin — watch out, 4 is "yonin" (one n), not "yonnin".',
     readings: [
       { romaji: 'hitori', hiragana: 'ひとり' },
@@ -122,6 +137,8 @@ const COUNTERS = [
     label: '個 (ko)',
     meaning: 'small/general objects (apples, boxes, gadgets...)',
     icon: '🍎',
+    rank: 3,
+    sentence: 'Can I have {n} apples?',
     note: 'Gemination (small っ) before k: 1, 6, 8, 10 double the consonant.',
     readings: [
       { romaji: 'ikko', hiragana: 'いっこ' },
@@ -142,6 +159,8 @@ const COUNTERS = [
     label: '本 (hon/bon/pon)',
     meaning: 'long thin objects (bottles, pens, pencils, trees...)',
     icon: '🖊️',
+    rank: 5,
+    sentence: 'There are {n} pencils in the box.',
     note: 'h→p after っ (1,6,8,10), h→b after n (3), and stays h after vowels (2,5,7,9). Classic three-way alternation.',
     readings: [
       { romaji: 'ippon', hiragana: 'いっぽん' },
@@ -162,6 +181,8 @@ const COUNTERS = [
     label: '枚 (mai)',
     meaning: 'flat objects (paper, tickets, plates, shirts...)',
     icon: '📄',
+    rank: 4,
+    sentence: 'She bought {n} tickets.',
     note: 'Fully regular — no sound changes at all. A good one to build confidence on.',
     readings: [
       { romaji: 'ichimai', hiragana: 'いちまい' },
@@ -182,6 +203,8 @@ const COUNTERS = [
     label: '匹 (hiki/biki/piki)',
     meaning: 'small animals (cats, dogs, bugs, fish...)',
     icon: '🐱',
+    rank: 8,
+    sentence: 'I saw {n} cats in the park.',
     note: 'Same h→p/b/h alternation pattern as 本 (hon).',
     readings: [
       { romaji: 'ippiki', hiragana: 'いっぴき' },
@@ -202,6 +225,8 @@ const COUNTERS = [
     label: '頭 (tou)',
     meaning: 'large animals (cows, horses, elephants...)',
     icon: '🐘',
+    rank: 15,
+    sentence: 'The zoo has {n} elephants.',
     note: 'Gemination before t: 1, 8, 10.',
     readings: [
       { romaji: 'ittou', hiragana: 'いっとう' },
@@ -222,6 +247,8 @@ const COUNTERS = [
     label: '冊 (satsu)',
     meaning: 'bound objects (books, magazines, notebooks...)',
     icon: '📚',
+    rank: 11,
+    sentence: 'I borrowed {n} books from the library.',
     note: 'Gemination before s: 1, 8, 10.',
     readings: [
       { romaji: 'issatsu', hiragana: 'いっさつ' },
@@ -242,6 +269,8 @@ const COUNTERS = [
     label: '階 (kai/gai) — floors',
     meaning: 'floor of a building',
     icon: '🏢',
+    rank: 14,
+    sentence: 'The elevator stopped on floor {n}.',
     note: 'Counter for floors: mostly kai, but 3 becomes "gai" (sangai) — a famous exception. "What floor?" = 何階 (nangai).',
     readings: [
       { romaji: 'ikkai', hiragana: 'いっかい' },
@@ -262,6 +291,8 @@ const COUNTERS = [
     label: '回 (kai) — times',
     meaning: 'number of times / occurrences',
     icon: '🔁',
+    rank: 12,
+    sentence: "I've been to Japan {n} times.",
     note: 'Counter for occurrences — same gemination pattern as 個 (ko), no gai exception this time.',
     readings: [
       { romaji: 'ikkai', hiragana: 'いっかい' },
@@ -282,6 +313,8 @@ const COUNTERS = [
     label: '歳/才 (sai)',
     meaning: 'age (years old)',
     icon: '🎂',
+    rank: 7,
+    sentence: 'My little brother is {n} years old.',
     note: 'Regular X+sai gemination pattern (1,8,10) — except 20, which is the irregular word "hatachi", not "nijussai".',
     readings: [
       { romaji: 'issai', hiragana: 'いっさい' },
@@ -303,12 +336,14 @@ const COUNTERS = [
     label: '円 (en)',
     meaning: 'yen (currency)',
     icon: '💴',
+    rank: 6,
+    sentence: 'This snack costs {n} yen.',
     note: 'Fully regular — no sound changes.',
     readings: [
       { romaji: 'ichien', hiragana: 'いちえん' },
       { romaji: 'nien', hiragana: 'にえん' },
-      { romaji: 'sanen', hiragana: 'さんえん' },
-      { romaji: 'yonen', hiragana: 'よんえん' },
+      { romaji: "san'en", hiragana: 'さんえん' },
+      { romaji: "yon'en", hiragana: 'よんえん' },
       { romaji: 'goen', hiragana: 'ごえん' },
       { romaji: 'rokuen', hiragana: 'ろくえん' },
       { romaji: 'nanaen', hiragana: 'ななえん' },
@@ -323,6 +358,8 @@ const COUNTERS = [
     label: '分 (fun/pun)',
     meaning: 'minutes',
     icon: '⏱️',
+    rank: 10,
+    sentence: 'The train leaves in {n} minutes.',
     note: 'f→p after っ (1,6,8,10), stays f otherwise. Same family as 本/匹.',
     readings: [
       { romaji: 'ippun', hiragana: 'いっぷん' },
@@ -343,6 +380,8 @@ const COUNTERS = [
     label: '杯 (hai/bai/pai)',
     meaning: 'cups/glasses of liquid',
     icon: '🥤',
+    rank: 13,
+    sentence: 'He drank {n} glasses of water.',
     note: 'Same h→p/b/h alternation as 本 and 匹.',
     readings: [
       { romaji: 'ippai', hiragana: 'いっぱい' },
@@ -363,6 +402,8 @@ const COUNTERS = [
     label: '台 (dai)',
     meaning: 'machines & vehicles (cars, computers, TVs...)',
     icon: '🚗',
+    rank: 9,
+    sentence: 'The dealership has {n} cars.',
     note: 'Fully regular — no sound changes.',
     readings: [
       { romaji: 'ichidai', hiragana: 'いちだい' },
@@ -377,4 +418,80 @@ const COUNTERS = [
       { romaji: 'juudai', hiragana: 'じゅうだい' },
     ],
   },
+];
+
+/* ------------------------------------------------------------------
+   Telling time (何時何分 / nanji nanpun)
+   Hours have their own irregular readings — 4, 7 and 9 o'clock do NOT
+   follow the normal digit series (yon/nana/kyuu); they use the old
+   readings yo/shichi/ku instead. Minutes reuse the 分 (fun/pun)
+   pattern from COUNTERS, with the well-known っ gemination at the
+   "juu"+fun boundary for every multiple of ten.
+------------------------------------------------------------------- */
+
+const CLOCK_EMOJI = ['🕛', '🕐', '🕑', '🕒', '🕓', '🕔', '🕕', '🕖', '🕗', '🕘', '🕙', '🕚'];
+const HOUR_R = ['', 'ichiji', 'niji', 'sanji', 'yoji', 'goji', 'rokuji', 'shichiji', 'hachiji', 'kuji', 'juuji', 'juuichiji', 'juuniji'];
+const HOUR_H = ['', 'いちじ', 'にじ', 'さんじ', 'よじ', 'ごじ', 'ろくじ', 'しちじ', 'はちじ', 'くじ', 'じゅうじ', 'じゅういちじ', 'じゅうにじ'];
+const IRREGULAR_HOURS = new Set([4, 7, 9]);
+
+// Minutes practiced are 5-minute increments (0, 5, 10, ... 55) — plenty
+// for a beginner and it keeps every reading following a clean pattern.
+const PRACTICE_MINUTES = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55];
+
+function minuteReading(m) {
+  if (m === 0) return { romaji: '', hiragana: '' };
+  if (m === 5) return { romaji: 'gofun', hiragana: 'ごふん' };
+
+  const tens = Math.floor(m / 10);
+  const ones = m % 10;
+
+  if (ones === 5) {
+    // 15, 25, 35, 45, 55 -> (X)juugofun
+    const prefixR = tens === 1 ? 'juu' : DIGIT_R[tens] + 'juu';
+    const prefixH = tens === 1 ? 'じゅう' : DIGIT_H[tens] + 'じゅう';
+    return { romaji: prefixR + 'gofun', hiragana: prefixH + 'ごふん' };
+  }
+  // 10, 20, 30, 40, 50 -> (X)juppun (the juu+fun boundary always geminates)
+  const prefixR = tens === 1 ? '' : DIGIT_R[tens];
+  const prefixH = tens === 1 ? '' : DIGIT_H[tens];
+  const reading = { romaji: prefixR + 'juppun', hiragana: prefixH + 'じゅっぷん' };
+  if (m === 30) {
+    reading.altRomaji = 'han';
+    reading.altHiragana = 'はん';
+  }
+  return reading;
+}
+
+function timeToReading(hour, minute) {
+  const min = minuteReading(minute);
+  const romaji = joinR(HOUR_R[hour], min.romaji);
+  const hiragana = HOUR_H[hour] + min.hiragana;
+  const result = { romaji, hiragana, display: `${hour}:${String(minute).padStart(2, '0')}` };
+  if (min.altRomaji) {
+    result.altRomaji = joinR(HOUR_R[hour], min.altRomaji);
+    result.altHiragana = HOUR_H[hour] + min.altHiragana;
+  }
+  return result;
+}
+
+/* ------------------------------------------------------------------
+   Beginner-friendly sentence frames used in "sentence mode" — wraps a
+   bare number/counter/time prompt in a little context so it feels
+   like real usage instead of a flashcard fragment.
+------------------------------------------------------------------- */
+
+const NUMBER_SENTENCES = [
+  'There are {n} students in the classroom.',
+  'I read {n} pages last night.',
+  'The store is {n} meters from here.',
+  'She has {n} unread messages.',
+  'The recipe needs {n} eggs.',
+];
+
+const TIME_SENTENCES = [
+  'The train departs at {t}.',
+  'I usually wake up at {t}.',
+  'The meeting starts at {t}.',
+  'The store closes at {t}.',
+  'Class ends at {t}.',
 ];
