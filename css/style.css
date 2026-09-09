@@ -7,11 +7,14 @@
   --accent: #b3413e;
   --accent-dark: #8f2f2c;
   --accent-soft: #f6e3e2;
+  --accent2: #2f5d62;
+  --accent2-soft: #e3edee;
   --good: #2f7a4d;
   --good-soft: #e5f3ea;
   --bad: #b3413e;
   --bad-soft: #fbe8e7;
   --radius: 14px;
+  --shadow: 0 1px 2px rgba(30, 20, 10, 0.04), 0 6px 16px -8px rgba(30, 20, 10, 0.12);
   color-scheme: light;
 }
 
@@ -25,10 +28,13 @@
     --accent: #e08683;
     --accent-dark: #f2a8a5;
     --accent-soft: #3a2523;
+    --accent2: #7fb8bd;
+    --accent2-soft: #223335;
     --good: #7ed69a;
     --good-soft: #1e3327;
     --bad: #e08683;
     --bad-soft: #3a2323;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.2), 0 8px 20px -10px rgba(0, 0, 0, 0.5);
     color-scheme: dark;
   }
 }
@@ -78,7 +84,10 @@ body {
   color: var(--text-muted);
   cursor: pointer;
   border-bottom: 2px solid transparent;
+  transition: color 0.15s ease, border-color 0.15s ease;
 }
+
+.tab-btn:hover { color: var(--text); }
 
 .tab-btn.active {
   color: var(--accent-dark);
@@ -101,6 +110,7 @@ main {
   border-radius: var(--radius);
   padding: 1.25rem;
   margin-bottom: 1.25rem;
+  box-shadow: var(--shadow);
 }
 
 .scoreboard {
@@ -116,6 +126,7 @@ main {
   border-radius: var(--radius);
   padding: 0.75rem;
   text-align: center;
+  box-shadow: var(--shadow);
 }
 
 .stat-value {
@@ -147,6 +158,7 @@ main {
 
 .segmented {
   display: inline-flex;
+  flex-wrap: wrap;
   border: 1px solid var(--border);
   border-radius: 10px;
   overflow: hidden;
@@ -156,12 +168,15 @@ main {
   border: none;
   background: var(--surface);
   color: var(--text);
-  padding: 0.5rem 1rem;
+  padding: 0.55rem 1rem;
   cursor: pointer;
   font-size: 0.9rem;
   border-right: 1px solid var(--border);
+  transition: background 0.15s ease, color 0.15s ease;
+  white-space: nowrap;
 }
 .segmented button:last-child { border-right: none; }
+.segmented button:hover:not(.active) { background: var(--bg); }
 .segmented button.active {
   background: var(--accent);
   color: #fff;
@@ -183,6 +198,9 @@ select {
 }
 
 .chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
   border: 1px solid var(--border);
   border-radius: 999px;
   padding: 0.35rem 0.75rem;
@@ -191,13 +209,30 @@ select {
   background: var(--surface);
   color: var(--text);
   user-select: none;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
 }
+
+.chip:hover { border-color: var(--accent); transform: translateY(-1px); }
 
 .chip.active {
   background: var(--accent-soft);
   border-color: var(--accent);
   color: var(--accent-dark);
   font-weight: 600;
+}
+
+.chip-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--accent-dark);
+  background: var(--accent-soft);
+  border-radius: 999px;
+  padding: 0.1rem 0.45rem;
+  white-space: nowrap;
+}
+
+.chip.active .chip-badge {
+  background: var(--surface);
 }
 
 .chip-actions {
@@ -219,10 +254,20 @@ select {
 .switch {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.6rem;
   font-size: 0.9rem;
   cursor: pointer;
 }
+
+.switch input {
+  width: 2.1rem;
+  height: 1.2rem;
+  accent-color: var(--accent);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.toggle-row { margin-bottom: 0.75rem; }
 
 .quiz-card {
   text-align: center;
@@ -231,12 +276,14 @@ select {
 .quiz-icon {
   font-size: 2.5rem;
   margin-bottom: 0.5rem;
+  animation: pop-in 0.25s ease;
 }
 
 .quiz-prompt {
   font-size: 2.2rem;
   font-weight: 700;
   margin-bottom: 0.25rem;
+  animation: fade-up 0.25s ease;
 }
 
 .quiz-sublabel {
@@ -244,6 +291,39 @@ select {
   font-size: 0.95rem;
   margin-bottom: 1.25rem;
   min-height: 1.2em;
+}
+
+.quiz-sentence {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  font-style: italic;
+  max-width: 420px;
+  margin: 0 auto 1.25rem;
+  min-height: 1.2em;
+}
+
+.hiragana-preview {
+  margin-top: 0.6rem;
+  min-height: 2rem;
+  font-size: 1.4rem;
+  color: var(--accent2);
+  background: var(--accent2-soft);
+  border-radius: 10px;
+  padding: 0.4rem;
+  max-width: 320px;
+  margin-left: auto;
+  margin-right: auto;
+  letter-spacing: 0.05em;
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pop-in {
+  from { opacity: 0; transform: scale(0.85); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 .answer-form {
@@ -278,12 +358,15 @@ select {
   color: #fff;
   cursor: pointer;
   font-weight: 600;
+  transition: background 0.15s ease, transform 0.1s ease;
 }
 
-#submit-btn:hover, .primary-btn:hover { background: var(--accent-dark); }
+#submit-btn:hover, .primary-btn:hover { background: var(--accent-dark); transform: translateY(-1px); }
+#submit-btn:active, .primary-btn:active { transform: translateY(0); }
 
 .primary-btn {
   margin-top: 1rem;
+  animation: fade-up 0.2s ease;
 }
 
 .choice-grid {
@@ -302,9 +385,10 @@ select {
   color: var(--text);
   font-size: 1rem;
   cursor: pointer;
+  transition: border-color 0.15s ease, transform 0.1s ease;
 }
 
-.choice-btn:hover { border-color: var(--accent); }
+.choice-btn:hover:not(:disabled) { border-color: var(--accent); transform: translateY(-1px); }
 .choice-btn.correct { background: var(--good-soft); border-color: var(--good); color: var(--good); }
 .choice-btn.incorrect { background: var(--bad-soft); border-color: var(--bad); color: var(--bad); }
 .choice-btn:disabled { cursor: default; opacity: 0.85; }
@@ -314,6 +398,7 @@ select {
   font-size: 1.1rem;
   font-weight: 600;
   min-height: 1.6em;
+  animation: fade-up 0.2s ease;
 }
 
 .feedback.correct { color: var(--good); }

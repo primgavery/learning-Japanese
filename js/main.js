@@ -4,6 +4,16 @@
 
 const el = (id) => document.getElementById(id);
 
+function sortedByRank(list) {
+  return [...list].sort((a, b) => a.rank - b.rank);
+}
+
+function rankBadge(rank) {
+  if (rank <= 2) return '⭐ Most common';
+  if (rank <= 6) return '● Common';
+  return '';
+}
+
 function initTabs() {
   document.querySelectorAll('.tab-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -30,8 +40,11 @@ function initModeSelect() {
 }
 
 function updateSettingsVisibility() {
-  el('number-range-row').style.display = Game.mode === 'counters' ? 'none' : '';
-  el('counter-select-row').style.display = Game.mode === 'numbers' ? 'none' : '';
+  const showNumbers = Game.mode === 'numbers' || Game.mode === 'mixed';
+  const showCounters = Game.mode === 'counters' || Game.mode === 'mixed';
+  el('number-range-row').style.display = showNumbers ? '' : 'none';
+  el('counter-select-row').style.display = showCounters ? '' : 'none';
+  el('prioritize-row').style.display = showCounters ? '' : 'none';
 }
 
 function initNumberRange() {
@@ -47,11 +60,12 @@ function initNumberRange() {
 function renderCounterChips() {
   const list = el('counter-chip-list');
   list.innerHTML = '';
-  COUNTERS.forEach((c) => {
+  sortedByRank(COUNTERS).forEach((c) => {
     const chip = document.createElement('button');
     chip.type = 'button';
     chip.className = 'chip' + (Game.enabledCounters.includes(c.id) ? ' active' : '');
-    chip.textContent = `${c.icon} ${c.label}`;
+    const badge = rankBadge(c.rank);
+    chip.innerHTML = `${c.icon} ${c.label}${badge ? `<span class="chip-badge">${badge}</span>` : ''}`;
     chip.addEventListener('click', () => {
       const idx = Game.enabledCounters.indexOf(c.id);
       if (idx >= 0) Game.enabledCounters.splice(idx, 1);
@@ -78,11 +92,11 @@ function initCounterActions() {
   });
 }
 
-function initMultipleChoiceToggle() {
-  const toggle = el('mc-toggle');
-  toggle.checked = Game.multipleChoice;
+function initToggle(id, gameKey) {
+  const toggle = el(id);
+  toggle.checked = Game[gameKey];
   toggle.addEventListener('change', () => {
-    Game.multipleChoice = toggle.checked;
+    Game[gameKey] = toggle.checked;
     Game.saveSettings();
     startNewQuestion();
   });
@@ -114,10 +128,25 @@ function renderMissed() {
     });
 }
 
+function updateHiraganaPreview() {
+  const raw = el('answer-input').value;
+  const preview = el('hiragana-preview');
+  if (!raw.trim()) {
+    preview.innerHTML = '&nbsp;';
+    return;
+  }
+  if (isHiraganaInput(raw)) {
+    preview.textContent = raw;
+  } else {
+    preview.textContent = romajiToHiragana(raw);
+  }
+}
+
 function startNewQuestion() {
-  if (Game.enabledCounters.length === 0 && Game.mode !== 'numbers') {
+  if (Game.enabledCounters.length === 0 && (Game.mode === 'counters' || Game.mode === 'mixed')) {
     el('quiz-prompt').textContent = 'Select at least one counter';
     el('quiz-sublabel').textContent = '';
+    el('quiz-sentence').textContent = '';
     el('answer-form').hidden = true;
     el('choice-grid').hidden = true;
     return;
@@ -127,18 +156,21 @@ function startNewQuestion() {
   const q = Game.next();
   el('quiz-icon').textContent = q.icon;
   el('quiz-prompt').textContent = q.promptKanji;
-  el('quiz-sublabel').textContent = q.promptLabel;
+  el('quiz-sublabel').textContent = q.sentence ? '' : q.promptLabel;
+  el('quiz-sentence').textContent = q.sentence || '';
   el('feedback').textContent = '';
   el('feedback').className = 'feedback';
   el('explanation').textContent = '';
   el('next-btn').hidden = true;
   el('answer-input').value = '';
   el('answer-input').disabled = false;
+  updateHiraganaPreview();
 
   const choiceGrid = el('choice-grid');
   choiceGrid.innerHTML = '';
   if (Game.multipleChoice) {
     el('answer-form').hidden = true;
+    el('hiragana-preview').hidden = true;
     choiceGrid.hidden = false;
     q.choices.forEach((choice) => {
       const btn = document.createElement('button');
@@ -149,6 +181,7 @@ function startNewQuestion() {
     });
   } else {
     choiceGrid.hidden = true;
+    el('hiragana-preview').hidden = false;
     el('answer-input').focus();
   }
 }
@@ -162,7 +195,7 @@ function handleAnswer(rawAnswer, choiceBtn) {
     fb.textContent = '✓ Correct!';
     fb.className = 'feedback correct';
   } else {
-    fb.textContent = `✗ Not quite. Correct answer: ${q.romaji} (${q.hiragana})`;
+    fb.textContent = `✗ Not quite. Correct answer: ${q.romajiDisplay || q.romaji} (${q.hiraganaDisplay || q.hiragana})`;
     fb.className = 'feedback incorrect';
   }
 
@@ -174,8 +207,8 @@ function handleAnswer(rawAnswer, choiceBtn) {
     const buttons = el('choice-grid').querySelectorAll('button');
     buttons.forEach((b) => {
       b.disabled = true;
-      if (b.textContent === q.romaji) b.classList.add('correct');
-      else if (b === choiceBtn) b.classList.add('incorrect');
+      if (b.textContent === q.choices.find((c) => normalize(c) === q.accepted[0])) b.classList.add('correct');
+      else if (b === choiceBtn && !correct) b.classList.add('incorrect');
     });
   } else {
     el('answer-input').disabled = true;
@@ -194,6 +227,7 @@ function initAnswerForm() {
     if (!val.trim()) return;
     handleAnswer(val, null);
   });
+  el('answer-input').addEventListener('input', updateHiraganaPreview);
   el('next-btn').addEventListener('click', startNewQuestion);
 }
 
@@ -212,22 +246,33 @@ function buildDigitReference() {
 
 function buildCounterReference() {
   const wrap = el('counter-reference');
-  wrap.innerHTML = COUNTERS.map((c) => {
+  wrap.innerHTML = sortedByRank(COUNTERS).map((c) => {
     const items = c.readings
       .map((r, i) => `<div class="counter-ref-item"><span class="n">${i + 1}</span>${r.romaji}<br>${r.hiragana}</div>`)
       .join('');
     const irregular20 = c.irregular20
       ? `<div class="counter-ref-item"><span class="n">20</span>${c.irregular20.romaji}<br>${c.irregular20.hiragana}</div>`
       : '';
+    const badge = rankBadge(c.rank);
     return `
       <div class="counter-ref-card">
-        <h3>${c.icon} ${c.label}</h3>
+        <h3>${c.icon} ${c.label}${badge ? `<span class="chip-badge">${badge}</span>` : ''}</h3>
         <div class="counter-ref-meaning">${c.meaning}</div>
         <div class="counter-ref-note">💡 ${c.note}</div>
         <div class="counter-ref-grid">${items}${irregular20}</div>
       </div>
     `;
   }).join('');
+}
+
+function buildHourReference() {
+  const tbody = el('hour-ref');
+  const rows = [];
+  for (let h = 1; h <= 12; h++) {
+    const irregular = IRREGULAR_HOURS.has(h) ? ' ⚠️ irregular' : '';
+    rows.push(`<tr><td>${h}時${irregular}</td><td>${HOUR_R[h]}</td><td>${HOUR_H[h]}</td></tr>`);
+  }
+  tbody.innerHTML = rows.join('');
 }
 
 function init() {
@@ -238,7 +283,9 @@ function init() {
   initNumberRange();
   renderCounterChips();
   initCounterActions();
-  initMultipleChoiceToggle();
+  initToggle('mc-toggle', 'multipleChoice');
+  initToggle('sentence-toggle', 'sentenceMode');
+  initToggle('prioritize-toggle', 'prioritizeCommon');
   initAnswerForm();
 
   // reflect loaded mode in the segmented control
@@ -249,6 +296,7 @@ function init() {
 
   buildDigitReference();
   buildCounterReference();
+  buildHourReference();
 
   updateScoreboard();
   startNewQuestion();
