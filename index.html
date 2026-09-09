@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kazoekata — Japanese Numbers &amp; Counters Trainer</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔢</text></svg>" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="app-header">
+    <h1>数え方 <span class="subtitle">Kazoekata — Numbers &amp; Counters Trainer</span></h1>
+    <nav class="tabs" id="tabs">
+      <button class="tab-btn active" data-tab="quiz">Quiz</button>
+      <button class="tab-btn" data-tab="reference">Reference</button>
+    </nav>
+  </header>
+
+  <main>
+    <section id="quiz-view" class="view active">
+      <div class="scoreboard">
+        <div class="stat"><span class="stat-value" id="stat-score">0</span><span class="stat-label">Correct</span></div>
+        <div class="stat"><span class="stat-value" id="stat-answered">0</span><span class="stat-label">Answered</span></div>
+        <div class="stat"><span class="stat-value" id="stat-streak">0</span><span class="stat-label">Streak</span></div>
+        <div class="stat"><span class="stat-value" id="stat-best">0</span><span class="stat-label">Best streak</span></div>
+      </div>
+
+      <div class="panel settings-panel">
+        <div class="settings-row">
+          <label class="settings-label">Mode</label>
+          <div class="segmented" id="mode-select">
+            <button data-mode="numbers" class="active">Numbers</button>
+            <button data-mode="counters">Counters</button>
+            <button data-mode="mixed">Mixed</button>
+          </div>
+        </div>
+
+        <div class="settings-row" id="number-range-row">
+          <label class="settings-label" for="number-max">Number range</label>
+          <select id="number-max">
+            <option value="20">1 – 20</option>
+            <option value="100" selected>1 – 100</option>
+            <option value="1000">1 – 1,000</option>
+            <option value="10000">1 – 10,000</option>
+            <option value="99999">1 – 99,999</option>
+          </select>
+        </div>
+
+        <div class="settings-row" id="counter-select-row">
+          <label class="settings-label">Counters to practice</label>
+          <div class="counter-chip-list" id="counter-chip-list"></div>
+          <div class="chip-actions">
+            <button id="counters-all" class="link-btn">Select all</button>
+            <button id="counters-none" class="link-btn">Clear</button>
+          </div>
+        </div>
+
+        <div class="settings-row">
+          <label class="settings-label" for="mc-toggle">Answer style</label>
+          <label class="switch">
+            <input type="checkbox" id="mc-toggle" />
+            <span>Multiple choice (off = type the romaji)</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="panel quiz-card">
+        <div class="quiz-icon" id="quiz-icon">🔢</div>
+        <div class="quiz-prompt" id="quiz-prompt">—</div>
+        <div class="quiz-sublabel" id="quiz-sublabel"></div>
+
+        <form id="answer-form" class="answer-form">
+          <input
+            type="text"
+            id="answer-input"
+            autocomplete="off"
+            autocapitalize="off"
+            spellcheck="false"
+            placeholder="type the reading, e.g. sanbon"
+          />
+          <button type="submit" id="submit-btn">Check</button>
+        </form>
+
+        <div class="choice-grid" id="choice-grid" hidden></div>
+
+        <div class="feedback" id="feedback"></div>
+        <div class="explanation" id="explanation"></div>
+
+        <button id="next-btn" class="primary-btn" hidden>Next question →</button>
+      </div>
+
+      <div class="panel missed-panel" id="missed-panel" hidden>
+        <h2>Review — recently missed</h2>
+        <ul id="missed-list"></ul>
+      </div>
+    </section>
+
+    <section id="reference-view" class="view">
+      <div class="panel">
+        <h2>Number building blocks</h2>
+        <p class="hint">
+          Japanese numbers are built compositionally. Learn these pieces and you can read
+          almost any number.
+        </p>
+        <table class="ref-table">
+          <thead><tr><th>#</th><th>Reading</th><th>Hiragana</th></tr></thead>
+          <tbody id="digit-ref"></tbody>
+        </table>
+        <p class="hint">
+          Sound changes to memorize: <strong>300 = さんびゃく</strong> (not さんひゃく),
+          <strong>600 = ろっぴゃく</strong>, <strong>800 = はっぴゃく</strong>,
+          <strong>1000 = いっせん</strong>, <strong>3000 = さんぜん</strong>,
+          <strong>8000 = はっせん</strong>.
+        </p>
+      </div>
+
+      <div class="panel">
+        <h2>Counters (助数詞)</h2>
+        <p class="hint">
+          Japanese uses different counting words depending on what you're counting — this is
+          the part that trips up Spanish/English speakers, since neither language does this.
+          Each card below shows the full 1–10 pattern and the sound-change rule behind it.
+        </p>
+        <div id="counter-reference"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <p>Built for learning Japanese numbers &amp; counters. Progress is saved locally in your browser.</p>
+  </footer>
+
+  <script src="js/data.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
