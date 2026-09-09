@@ -1,5 +1,7 @@
 # 数え方 (Kazoekata) — Japanese Numbers & Counters Trainer
 
+https://primgavery.github.io/learning-Japanese/
+
 A small browser-based quiz app for practicing two of the hardest parts of
 Japanese for Spanish/English speakers: **numbers** (up to 99,999) and
 **counters (助数詞)** — the different words Japanese uses depending on what
