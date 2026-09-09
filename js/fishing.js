@@ -7,14 +7,17 @@
    at rare fish).
 ------------------------------------------------------------------- */
 
+// Swim times are deliberately generous — this is meant to be a low-stress
+// way to practice, not a reflex test. Rarer fish are still a bit quicker,
+// but nothing here should feel like it's racing a beginner's typing speed.
 const FISH_TIERS = {
-  common: { weight: 10, swim: 9, coins: 4, label: 'Common' },
-  uncommon: { weight: 6, swim: 7.5, coins: 8, label: 'Uncommon' },
-  rare: { weight: 3, swim: 6, coins: 15, label: 'Rare' },
-  epic: { weight: 1, swim: 5, coins: 25, label: 'Epic' },
+  common: { weight: 10, swim: 18, coins: 4, label: 'Common' },
+  uncommon: { weight: 6, swim: 15, coins: 8, label: 'Uncommon' },
+  rare: { weight: 3, swim: 13, coins: 15, label: 'Rare' },
+  epic: { weight: 1, swim: 11, coins: 25, label: 'Epic' },
 };
 
-const NUMBERFISH_TIER = { weight: 14, swim: 8, coins: 1, label: 'Baitfish' };
+const NUMBERFISH_TIER = { weight: 14, swim: 16, coins: 1, label: 'Baitfish' };
 
 function counterTier(rank) {
   if (rank <= 2) return 'common';
@@ -44,7 +47,7 @@ const FISH_SPECIES = [
 ];
 
 const UPGRADE_DEFS = {
-  bait: { label: 'Better Bait', icon: '🪱', desc: '+2s swim time for every fish', max: 3, baseCost: 20 },
+  bait: { label: 'Better Bait', icon: '🪱', desc: '+3s swim time for every fish', max: 3, baseCost: 20 },
   net: { label: 'Bigger Net', icon: '🥅', desc: '+1 fish on the line at once', max: 2, baseCost: 40 },
   charm: { label: 'Lucky Charm', icon: '🍀', desc: 'Rare & epic fish bite more often', max: 3, baseCost: 30 },
 };
@@ -95,7 +98,7 @@ const FishingState = {
   },
 
   swimBonus() {
-    return this.upgrades.bait * 2;
+    return this.upgrades.bait * 3;
   },
 };
 
@@ -184,6 +187,19 @@ function fishEl(id) {
   return document.querySelector(`.fish[data-id="${id}"]`);
 }
 
+// Reveals the correct reading right on the fish itself (not just in a
+// message that could scroll away) so a wrong guess is a learning moment,
+// not a dead end — the answer stays visible until the fish is caught.
+function revealAnswer(fish) {
+  if (fish.revealed) return;
+  fish.revealed = true;
+  const el = fishEl(fish.id);
+  if (!el) return;
+  const hint = el.querySelector('.fish-hint');
+  hint.textContent = fish.question.romaji;
+  hint.hidden = false;
+}
+
 function renderFish(fish) {
   const pond = document.getElementById('pond');
   const div = document.createElement('div');
@@ -196,6 +212,7 @@ function renderFish(fish) {
   const icon = fish.spec.kind === 'number' ? '🔢' : fish.spec.icon;
 
   div.innerHTML = `
+    <div class="fish-hint" hidden></div>
     <div class="fish-tag">${fish.question.promptText}</div>
     <div class="fish-timebar"><div class="fish-timebar-fill"></div></div>
     <div class="fish-emoji-wrap tier-${tierClass}"><span class="fish-emoji">${icon}</span></div>
@@ -416,8 +433,12 @@ function initFishing() {
       handleCatch(fish);
       input.value = '';
       updateCastPreview();
+    } else if (fish.revealed) {
+      showMessage(`Almost! It's "${fish.question.romaji}" — try typing exactly that.`, 'bad');
+      shakeCastInput();
     } else {
-      showMessage('Not quite — try again before it swims off!', 'bad');
+      revealAnswer(fish);
+      showMessage(`Not quite! It's "${fish.question.romaji}" (${fish.question.hiragana}) — type that to reel it in.`, 'bad');
       shakeCastInput();
     }
   });
