@@ -121,8 +121,13 @@ const Game = {
   },
 
   buildCounterQuestion() {
-    const counter = this.pickCounter();
+    return this.buildCounterQuestionFor(this.pickCounter());
+  },
 
+  // Builds a counter question pinned to a specific counter — shared by the
+  // quiz (which picks the counter itself) and the fishing game (which picks
+  // a counter per fish species).
+  buildCounterQuestionFor(counter) {
     const useIrregular20 =
       counter.irregular20 && this.includeAgeIrregular && Math.random() < 0.15;
 

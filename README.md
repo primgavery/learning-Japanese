@@ -58,6 +58,30 @@ python3 -m http.server 8080
 - Score, streak, and a "recently missed" review list — all persisted in
   `localStorage` so your settings and best streak survive a refresh.
 
+### 🎣 Fishing mini-game
+
+A separate, more arcade-y way to practice the same content. Cast a line into
+the pond; fish swim across tagged with a number, counter, or time (e.g. a
+fish labeled "3匹"). Type the reading before it swims off to reel it in.
+
+- **Rarity mirrors real-world usefulness, inverted for challenge** — common
+  counters (つ, 人...) show up constantly as easy, low-value "common" fish so
+  you get lots of low-stakes reps on what matters most in real life; rare
+  counters (頭, 階...) show up rarely as high-value "epic" fish — a fun bonus
+  challenge, not the main grind.
+- **Coins & combo** — catches pay coins (more for rarer fish), and an
+  unbroken catch streak raises a combo multiplier; letting one escape resets
+  the combo (no other penalty — wrong guesses can just be retried before the
+  fish swims off).
+- **Tackle shop** — spend coins on Better Bait (more swim time), a Bigger Net
+  (more fish on the line at once), and a Lucky Charm (better odds at rare
+  fish).
+- **Catch log** — a Pokédex-style collection grid: every counter (plus a
+  rare "Clockfish" for time practice) is a species to discover; catching one
+  for the first time reveals its meaning and sound-change note there.
+- Pauses automatically when you switch tabs, and everything (coins,
+  upgrades, catch log) is saved in `localStorage`.
+
 ## Project structure
 
 ```
@@ -66,5 +90,6 @@ css/style.css      styling (light/dark aware)
 js/romaji.js       romaji -> hiragana converter (mora table, sokuon, digraphs)
 js/data.js         number/time reading generators + counter data tables (ranked)
 js/game.js         quiz engine (question generation, weighted selection, grading, scoring)
-js/main.js         DOM wiring
+js/main.js         DOM wiring for the quiz/reference tabs
+js/fishing.js       fishing mini-game (spawning, catching, shop, collection)
 ```

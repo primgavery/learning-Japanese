@@ -502,3 +502,281 @@ select {
   .scoreboard { grid-template-columns: repeat(2, 1fr); }
   .quiz-prompt { font-size: 1.8rem; }
 }
+
+/* ------------------------------------------------------------------
+   Fishing mini-game
+------------------------------------------------------------------- */
+
+.fishing-topbar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.fishing-stat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.75rem;
+  text-align: center;
+  box-shadow: var(--shadow);
+}
+
+.fishing-stat-value {
+  display: block;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--accent-dark);
+}
+
+.fishing-stat-label {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.pond-panel { text-align: center; }
+
+.pond {
+  position: relative;
+  height: 260px;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 1rem;
+  background: linear-gradient(180deg, #bfe3ec 0%, #8fc7d9 45%, #5fa3ba 100%);
+}
+
+@media (prefers-color-scheme: dark) {
+  .pond { background: linear-gradient(180deg, #1c3a44 0%, #163038 45%, #0f242b 100%); }
+}
+
+.fish {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+  z-index: 1;
+}
+
+.fish.dir-ltr { left: -70px; animation-name: swim-ltr; }
+.fish.dir-rtl { right: -70px; animation-name: swim-rtl; }
+.fish.dir-rtl .fish-emoji { display: inline-block; transform: scaleX(-1); }
+
+.fish.selected { z-index: 2; }
+
+.pond.paused .fish,
+.pond.paused .fish-timebar-fill {
+  animation-play-state: paused !important;
+}
+
+@keyframes swim-ltr {
+  from { left: -70px; }
+  to { left: 100%; }
+}
+
+@keyframes swim-rtl {
+  from { right: -70px; }
+  to { right: 100%; }
+}
+
+.fish-tag {
+  background: var(--surface);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 0.1rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+  margin-bottom: 3px;
+  box-shadow: var(--shadow);
+}
+
+.fish-timebar {
+  width: 42px;
+  height: 4px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 3px;
+}
+
+.fish-timebar-fill {
+  height: 100%;
+  width: 100%;
+  background: var(--good);
+  animation-name: shrink-bar;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
+@keyframes shrink-bar {
+  from { width: 100%; background: var(--good); }
+  60% { background: #d9a63e; }
+  to { width: 0%; background: var(--bad); }
+}
+
+.fish-emoji-wrap {
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface);
+  border: 3px solid var(--border);
+  box-shadow: var(--shadow);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.fish.selected .fish-emoji-wrap {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-soft);
+}
+
+.fish-emoji-wrap.tier-filler { border-color: #b9b2a4; }
+.fish-emoji-wrap.tier-common { border-color: #8fae8f; }
+.fish-emoji-wrap.tier-uncommon { border-color: #5f9ec9; }
+.fish-emoji-wrap.tier-rare { border-color: #9b6fc9; }
+.fish-emoji-wrap.tier-epic { border-color: #d4a72c; }
+
+.fish.selected .fish-emoji-wrap.tier-filler,
+.fish.selected .fish-emoji-wrap.tier-common,
+.fish.selected .fish-emoji-wrap.tier-uncommon,
+.fish.selected .fish-emoji-wrap.tier-rare,
+.fish.selected .fish-emoji-wrap.tier-epic {
+  border-color: var(--accent);
+}
+
+.fish-emoji { font-size: 1.3rem; }
+
+.fish.caught {
+  animation: catch-pop 0.5s ease forwards;
+}
+
+@keyframes catch-pop {
+  0% { transform: scale(1) translateY(0); opacity: 1; }
+  40% { transform: scale(1.3) translateY(-10px); opacity: 1; }
+  100% { transform: scale(0.6) translateY(-60px); opacity: 0; }
+}
+
+.coin-float {
+  position: absolute;
+  transform: translate(-50%, 0);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--accent-dark);
+  animation: coin-float-up 0.9s ease forwards;
+  pointer-events: none;
+  z-index: 3;
+}
+
+@keyframes coin-float-up {
+  from { opacity: 1; transform: translate(-50%, 0); }
+  to { opacity: 0; transform: translate(-50%, -40px); }
+}
+
+.fishing-message {
+  min-height: 1.4em;
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-top: 0.5rem;
+}
+
+.fishing-message.good { color: var(--good); }
+.fishing-message.bad { color: var(--bad); }
+.fishing-message.muted { color: var(--text-muted); font-weight: 400; font-style: italic; }
+
+#cast-input.shake { animation: shake 0.3s ease; border-color: var(--bad); }
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+
+.fishing-shop-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+.fishing-shop-header h2 { margin: 0; }
+
+.shop-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.75rem;
+}
+
+.shop-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.9rem;
+  text-align: center;
+}
+
+.shop-icon { font-size: 1.6rem; }
+.shop-name { font-weight: 700; margin-top: 0.25rem; }
+.shop-desc { font-size: 0.8rem; color: var(--text-muted); margin: 0.25rem 0 0.5rem; min-height: 2.2em; }
+.shop-level { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.5rem; }
+
+.shop-buy-btn {
+  width: 100%;
+  padding: 0.5rem;
+  border-radius: 8px;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+.shop-buy-btn:hover:not(:disabled) { background: var(--accent-dark); }
+.shop-buy-btn:disabled { background: var(--border); color: var(--text-muted); cursor: not-allowed; }
+
+.shop-maxed {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--good);
+  padding: 0.5rem;
+}
+
+.collection-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 0.6rem;
+}
+
+.collection-card {
+  border-radius: var(--radius);
+  padding: 0.75rem;
+  text-align: center;
+  border: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.collection-card.locked { opacity: 0.55; }
+.collection-card.locked .collection-icon { font-size: 1.6rem; }
+
+.collection-card.caught { background: var(--surface); }
+.collection-card.caught.tier-common { border-color: #8fae8f; }
+.collection-card.caught.tier-uncommon { border-color: #5f9ec9; }
+.collection-card.caught.tier-rare { border-color: #9b6fc9; }
+.collection-card.caught.tier-epic { border-color: #d4a72c; }
+
+.collection-icon { font-size: 1.8rem; }
+.collection-name { font-weight: 700; font-size: 0.85rem; margin-top: 0.3rem; }
+.collection-meaning { font-size: 0.72rem; color: var(--text-muted); margin: 0.2rem 0; }
+.collection-tier { font-size: 0.72rem; color: var(--text-muted); margin-top: 0.3rem; }
+.collection-count { font-size: 0.75rem; color: var(--accent-dark); font-weight: 600; }
+
+@media (max-width: 520px) {
+  .fishing-topbar { grid-template-columns: repeat(2, 1fr); }
+  .pond { height: 220px; }
+}
