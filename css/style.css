@@ -679,6 +679,15 @@ select {
   100% { transform: scale(0.6) translateY(-60px); opacity: 0; }
 }
 
+.fish.missed {
+  animation: miss-fade 0.5s ease forwards;
+}
+
+@keyframes miss-fade {
+  0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(30px) rotate(-20deg); opacity: 0; }
+}
+
 .coin-float {
   position: absolute;
   transform: translate(-50%, 0);

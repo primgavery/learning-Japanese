@@ -67,18 +67,21 @@ it in.
 
 - **Multiple choice by default** — recognizing the right reading among a
   few options is a much fairer ask than free recall when you don't know it
-  yet; a wrong pick highlights the correct one immediately (and reveals it
-  right on the fish) rather than leaving you guessing blind. Typing it out
-  is there as an opt-in once you're ready for the extra challenge.
+  yet. Typing it out is there as an opt-in once you're ready for the extra
+  challenge.
+- **One guess per fish** — a wrong pick (or typed answer) loses that fish,
+  same as letting it escape; there's no clicking your way to a catch. It
+  still highlights the correct answer and reveals *why* it's correct (the
+  same sound-change note or irregular-hour explanation used elsewhere in
+  the app) before the fish is gone, so a miss is still a learning moment.
 - **Rarity mirrors real-world usefulness, inverted for challenge** — common
   counters (つ, 人...) show up constantly as easy, low-value "common" fish so
   you get lots of low-stakes reps on what matters most in real life; rare
   counters (頭, 階...) show up rarely as high-value "epic" fish — a fun bonus
   challenge, not the main grind.
 - **Coins & combo** — catches pay coins (more for rarer fish), and an
-  unbroken catch streak raises a combo multiplier; letting one escape resets
-  the combo (no other penalty — wrong guesses can just be retried before the
-  fish swims off).
+  unbroken catch streak raises a combo multiplier; a miss or an escape
+  resets the combo.
 - **Tackle shop** — spend coins on Better Bait (more swim time), a Bigger Net
   (more fish on the line at once), and a Lucky Charm (better odds at rare
   fish).

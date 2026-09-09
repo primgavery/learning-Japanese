@@ -261,27 +261,55 @@ function renderAnswerArea() {
 }
 
 function handleChoiceClick(fish, choiceText, btnEl) {
-  if (fish.caught) return;
+  if (fish.caught || fish.locked) return;
 
   if (normalize(choiceText) === fish.question.accepted[0]) {
     handleCatch(fish);
     return;
   }
 
+  // One guess — a wrong pick loses the fish, same as letting it escape.
+  // Lock it immediately (so its swim animation can't also trigger an
+  // escape mid-reveal) and highlight what was right and why before it's
+  // gone, so the mistake is still worth something — but there's no
+  // clicking your way to a catch.
+  fish.locked = true;
   revealAnswer(fish);
-  btnEl.disabled = true;
   btnEl.classList.add('incorrect');
   document.querySelectorAll('#fish-choice-grid .choice-btn').forEach((b) => {
+    b.disabled = true;
     if (normalize(b.dataset.choice) === fish.question.accepted[0]) b.classList.add('correct');
   });
-  showMessage(`Not quite! The right one's highlighted — give it a click.`, 'bad');
+  setTimeout(() => handleMiss(fish), 1100);
+}
+
+// A wrong guess (typed or picked) loses the fish outright — you don't get
+// to try again once you've guessed wrong, only the reveal + explanation.
+function handleMiss(fish) {
+  if (fish.caught) return;
+
+  const idx = FishingState.fishes.findIndex((f) => f.id === fish.id);
+  if (idx !== -1) FishingState.fishes.splice(idx, 1);
+  const el = fishEl(fish.id);
+  if (el) {
+    el.style.animation = 'none';
+    el.classList.add('missed');
+    setTimeout(() => el.remove(), 500);
+  }
+
+  FishingState.combo = 0;
+  const why = fish.question.explanation ? ` 💡 ${fish.question.explanation}` : '';
+  showMessage(`✗ Not this one — it's "${fish.question.romaji}" (${fish.question.hiragana}).${why}`, 'bad');
+
+  if (FishingState.selectedId === fish.id) selectAnyAvailable();
+  updateStatsUI();
 }
 
 function handleEscape(id) {
   const idx = FishingState.fishes.findIndex((f) => f.id === id);
   if (idx === -1) return;
   const fish = FishingState.fishes[idx];
-  if (fish.caught) return;
+  if (fish.caught || fish.locked) return;
 
   FishingState.fishes.splice(idx, 1);
   const el = fishEl(id);
@@ -295,6 +323,7 @@ function handleEscape(id) {
 }
 
 function handleCatch(fish) {
+  if (fish.caught || fish.locked) return;
   fish.caught = true;
   const multiplier = 1 + Math.min(FishingState.combo, 10) * 0.05;
   const coinsEarned = Math.round(fish.coinValue * multiplier);
@@ -475,17 +504,25 @@ function initFishing() {
       showMessage('Cast near a fish first — click one to target it!', 'muted');
       return;
     }
+    if (fish.caught || fish.locked) return;
+
     if (Game.checkAnswer(val, fish.question)) {
       handleCatch(fish);
       input.value = '';
       updateCastPreview();
-    } else if (fish.revealed) {
-      showMessage(`Almost! It's "${fish.question.romaji}" — try typing exactly that.`, 'bad');
-      shakeCastInput();
     } else {
+      // One guess — same rule as multiple-choice mode: a wrong answer
+      // loses the fish, but reveals the reading and why before it's gone.
+      fish.locked = true;
       revealAnswer(fish);
-      showMessage(`Not quite! It's "${fish.question.romaji}" (${fish.question.hiragana}) — type that to reel it in.`, 'bad');
+      input.disabled = true;
       shakeCastInput();
+      setTimeout(() => {
+        handleMiss(fish);
+        input.value = '';
+        input.disabled = false;
+        updateCastPreview();
+      }, 1100);
     }
   });
   document.getElementById('cast-input').addEventListener('input', updateCastPreview);
