@@ -12,6 +12,7 @@
     <h1>数え方 <span class="subtitle">Kazoekata — Numbers &amp; Counters Trainer</span></h1>
     <nav class="tabs" id="tabs">
       <button class="tab-btn active" data-tab="quiz">Quiz</button>
+      <button class="tab-btn" data-tab="fishing">🎣 Fishing</button>
       <button class="tab-btn" data-tab="reference">Reference</button>
     </nav>
   </header>
@@ -111,6 +112,55 @@
       </div>
     </section>
 
+    <section id="fishing-view" class="view">
+      <div class="fishing-topbar">
+        <div class="fishing-stat"><span class="fishing-stat-value">🪙 <span id="fish-coins">0</span></span><span class="fishing-stat-label">Coins</span></div>
+        <div class="fishing-stat"><span class="fishing-stat-value" id="fish-caught-total">0</span><span class="fishing-stat-label">Fish caught</span></div>
+        <div class="fishing-stat"><span class="fishing-stat-value" id="fish-combo">0</span><span class="fishing-stat-label">Combo</span></div>
+        <div class="fishing-stat"><span class="fishing-stat-value" id="fish-best-combo">0</span><span class="fishing-stat-label">Best combo</span></div>
+      </div>
+
+      <div class="panel">
+        <p class="hint">
+          Cast your line and reel in fish tagged with a number, counter, or time. Type the
+          reading before a fish swims away to catch it. Rarer counters (the ones you don't see
+          every day) show up as rarer, more valuable fish — the common ones (つ, 人...) bite
+          constantly so you get plenty of easy practice on what matters most.
+        </p>
+      </div>
+
+      <div class="panel pond-panel">
+        <div class="pond" id="pond"></div>
+        <form id="cast-form" class="answer-form">
+          <input
+            type="text"
+            id="cast-input"
+            autocomplete="off"
+            autocapitalize="off"
+            spellcheck="false"
+            placeholder="type the reading to reel it in"
+          />
+          <button type="submit" id="cast-btn">Reel in!</button>
+        </form>
+        <div class="hiragana-preview" id="cast-hiragana-preview">&nbsp;</div>
+        <div class="fishing-message" id="fishing-message">&nbsp;</div>
+      </div>
+
+      <div class="panel">
+        <div class="fishing-shop-header">
+          <h2>Tackle shop</h2>
+          <span class="hint">Spend coins to make fishing easier</span>
+        </div>
+        <div class="shop-grid" id="shop-grid"></div>
+      </div>
+
+      <div class="panel">
+        <h2>Catch log</h2>
+        <p class="hint">Every counter has a matching fish. Catch one to reveal it here.</p>
+        <div class="collection-grid" id="collection-grid"></div>
+      </div>
+    </section>
+
     <section id="reference-view" class="view">
       <div class="panel">
         <h2>Number building blocks</h2>
@@ -167,5 +217,6 @@
   <script src="js/data.js"></script>
   <script src="js/game.js"></script>
   <script src="js/main.js"></script>
+  <script src="js/fishing.js"></script>
 </body>
 </html>
