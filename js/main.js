@@ -42,9 +42,25 @@ function initModeSelect() {
 function updateSettingsVisibility() {
   const showNumbers = Game.mode === 'numbers' || Game.mode === 'mixed';
   const showCounters = Game.mode === 'counters' || Game.mode === 'mixed';
+  const showKana = Game.mode === 'kana';
   el('number-range-row').style.display = showNumbers ? '' : 'none';
   el('counter-select-row').style.display = showCounters ? '' : 'none';
   el('prioritize-row').style.display = showCounters ? '' : 'none';
+  el('kana-system-row').style.display = showKana ? '' : 'none';
+}
+
+function initKanaSystemSelect() {
+  const wrap = el('kana-system-select');
+  wrap.querySelectorAll('button').forEach((btn) => {
+    btn.classList.toggle('active', btn.dataset.system === Game.kanaSystem);
+    btn.addEventListener('click', () => {
+      wrap.querySelectorAll('button').forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+      Game.kanaSystem = btn.dataset.system;
+      Game.saveSettings();
+      startNewQuestion();
+    });
+  });
 }
 
 function initNumberRange() {
@@ -275,6 +291,60 @@ function buildHourReference() {
   tbody.innerHTML = rows.join('');
 }
 
+const KANA_ROW_DEFS = [
+  ['a', 'i', 'u', 'e', 'o'],
+  ['ka', 'ki', 'ku', 'ke', 'ko'],
+  ['sa', 'shi', 'su', 'se', 'so'],
+  ['ta', 'chi', 'tsu', 'te', 'to'],
+  ['na', 'ni', 'nu', 'ne', 'no'],
+  ['ha', 'hi', 'fu', 'he', 'ho'],
+  ['ma', 'mi', 'mu', 'me', 'mo'],
+  ['ya', null, 'yu', null, 'yo'],
+  ['ra', 'ri', 'ru', 're', 'ro'],
+  ['wa', null, null, null, 'wo'],
+  ['n', null, null, null, null],
+  ['ga', 'gi', 'gu', 'ge', 'go'],
+  ['za', 'ji', 'zu', 'ze', 'zo'],
+  ['da', 'di', 'du', 'de', 'do'],
+  ['ba', 'bi', 'bu', 'be', 'bo'],
+  ['pa', 'pi', 'pu', 'pe', 'po'],
+];
+
+const KANA_YOUON_ROWS = [
+  ['kya', 'kyu', 'kyo'],
+  ['sha', 'shu', 'sho'],
+  ['cha', 'chu', 'cho'],
+  ['nya', 'nyu', 'nyo'],
+  ['hya', 'hyu', 'hyo'],
+  ['mya', 'myu', 'myo'],
+  ['rya', 'ryu', 'ryo'],
+  ['gya', 'gyu', 'gyo'],
+  ['ja', 'ju', 'jo'],
+  ['bya', 'byu', 'byo'],
+  ['pya', 'pyu', 'pyo'],
+];
+
+function buildKanaReference() {
+  const byRomaji = {};
+  KANA_CHART.forEach((e) => { byRomaji[e.romaji] = e; });
+
+  const cell = (romaji) => {
+    if (!romaji) return '<div class="kana-cell kana-cell-empty"></div>';
+    const e = byRomaji[romaji];
+    if (!e) return '<div class="kana-cell kana-cell-empty"></div>';
+    return `<div class="kana-cell"><div class="kana-glyphs">${e.hiragana} ${e.katakana}</div><div class="kana-romaji">${e.romaji}</div></div>`;
+  };
+
+  const mainGrid = KANA_ROW_DEFS.map((row) => `<div class="kana-row">${row.map(cell).join('')}</div>`).join('');
+  const youonGrid = KANA_YOUON_ROWS.map((row) => `<div class="kana-row kana-row-youon">${row.map(cell).join('')}</div>`).join('');
+
+  el('kana-reference').innerHTML = `
+    <div class="kana-grid">${mainGrid}</div>
+    <h3 class="kana-subheading">Combined sounds (拗音)</h3>
+    <div class="kana-grid">${youonGrid}</div>
+  `;
+}
+
 function init() {
   Game.loadSettings();
 
@@ -286,6 +356,7 @@ function init() {
   initToggle('mc-toggle', 'multipleChoice');
   initToggle('sentence-toggle', 'sentenceMode');
   initToggle('prioritize-toggle', 'prioritizeCommon');
+  initKanaSystemSelect();
   initAnswerForm();
 
   // reflect loaded mode in the segmented control
@@ -294,6 +365,7 @@ function init() {
   });
   updateSettingsVisibility();
 
+  buildKanaReference();
   buildDigitReference();
   buildCounterReference();
   buildHourReference();

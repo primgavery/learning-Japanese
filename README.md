@@ -3,12 +3,12 @@
 https://primgavery.github.io/learning-Japanese/
 
 A small browser-based quiz app for practicing some of the hardest parts of
-Japanese for Spanish/English speakers: **numbers** (up to 99,999),
-**counters (助数詞)** — the different words Japanese uses depending on what
-you're counting (人 for people, 本 for long thin objects, 匹 for small
-animals, 枚 for flat objects, and so on), and **telling time** (何時何分),
-including the sound changes (gemination, h→p/b, irregular hour readings,
-etc.) that go with all of them.
+Japanese for Spanish/English speakers: **kana** (hiragana/katakana),
+**numbers** (up to 99,999), **counters (助数詞)** — the different words
+Japanese uses depending on what you're counting (人 for people, 本 for long
+thin objects, 匹 for small animals, 枚 for flat objects, and so on), and
+**telling time** (何時何分), including the sound changes (gemination, h→p/b,
+irregular hour readings, etc.) that go with all of them.
 
 No build step, no dependencies — it's plain HTML/CSS/JS.
 
@@ -23,6 +23,12 @@ python3 -m http.server 8080
 
 ## Features
 
+- **Kana mode** — practice reading hiragana, katakana, or both (toggleable),
+  covering all 104 sounds: the base 46, dakuten/handakuten (が/ば/ぱ rows),
+  and combined sounds (きゃ/しゃ/ちゃ...). The katakana chart is derived
+  programmatically from hiragana (they're a fixed Unicode offset apart)
+  rather than hand-duplicated, so there's one source of truth for every
+  reading in the app.
 - **Numbers mode** — practice reading numbers 1–20 up through 1–99,999.
   Readings (romaji + hiragana) are generated algorithmically, including the
   irregular sound changes (100=ひゃく not いちひゃく, 300=さんびゃく,
@@ -52,11 +58,23 @@ python3 -m http.server 8080
   directly too, and grading itself falls back to the same converter so
   alternate romanizations (e.g. "si"/"tu"/"hu" Kunrei-style spellings) are
   still recognized.
-- **Reference tab** — full 1–10 tables for every counter (sorted by
-  commonality, with "Most common"/"Common" badges), the core number-building
-  blocks, and the full 1–12 hour table with irregulars flagged.
+- **Reference tab** — a full kana chart (hiragana + katakana + romaji side
+  by side), full 1–10 tables for every counter (sorted by commonality, with
+  "Most common"/"Common" badges), the core number-building blocks, and the
+  full 1–12 hour table with irregulars flagged.
 - Score, streak, and a "recently missed" review list — all persisted in
   `localStorage` so your settings and best streak survive a refresh.
+
+### 🧠 Adaptive practice (mastery tracking)
+
+A lightweight Leitner-box spaced-repetition system (`js/mastery.js`) tracks
+your personal accuracy on specific counters (e.g. 6本 vs 2本), specific
+hours (4時, 7時, 9時...), and specific kana — separately from real-world
+frequency. Get something wrong and it comes up far more often until you get
+it right a few times in a row; get it right repeatedly and it fades into
+occasional review instead of disappearing. It's shared between the quiz
+*and* the fishing game, so progress made in one feeds the other — miss
+6本 while fishing and it'll turn up more in the quiz too, and vice versa.
 
 ### 🎣 Fishing mini-game
 
@@ -97,8 +115,13 @@ swim across tagged with a number, counter, or time (e.g. a fish labeled
 - **Catch log** — a Pokédex-style collection grid: every counter (plus a
   rare "Clockfish" for time practice) is a species to discover; catching one
   for the first time reveals its meaning and sound-change note there.
+- **Day streak & achievements** — a 🔥 streak for opening the tab on
+  consecutive calendar days (separate from the in-run catch combo), plus
+  unlockable badges (first catch, catch milestones, combo milestones, an
+  Epic-tier catch, completing the whole collection, streak milestones) with
+  a toast the moment one unlocks.
 - Pauses automatically when you switch tabs, and everything (coins,
-  upgrades, catch log) is saved in `localStorage`.
+  upgrades, catch log, streaks, achievements) is saved in `localStorage`.
 
 ## Project structure
 
@@ -106,8 +129,10 @@ swim across tagged with a number, counter, or time (e.g. a fish labeled
 index.html        page layout
 css/style.css      styling (light/dark aware)
 js/romaji.js       romaji -> hiragana converter (mora table, sokuon, digraphs)
+js/kana.js         kana chart, derived from romaji.js's mora tables
 js/data.js         number/time reading generators + counter data tables (ranked)
+js/mastery.js       shared Leitner-box mastery tracking
 js/game.js         quiz engine (question generation, weighted selection, grading, scoring)
 js/main.js         DOM wiring for the quiz/reference tabs
-js/fishing.js       fishing mini-game (spawning, catching, shop, collection)
+js/fishing.js       fishing mini-game (spawning, catching, shop, collection, streaks, achievements)
 ```
