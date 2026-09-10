@@ -368,6 +368,19 @@ select {
   animation: fade-up 0.2s ease;
 }
 
+.secondary-btn {
+  padding: 0.7rem 1.4rem;
+  font-size: 1rem;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  font-weight: 600;
+  transition: border-color 0.15s ease, transform 0.1s ease;
+}
+.secondary-btn:hover { border-color: var(--accent); transform: translateY(-1px); }
+
 .choice-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -928,3 +941,91 @@ select {
   .fishing-topbar { grid-template-columns: repeat(2, 1fr); }
   .pond { height: 220px; }
 }
+
+/* ------------------------------------------------------------------
+   Progress dashboard
+------------------------------------------------------------------- */
+
+.progress-overview {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.progress-group h3 {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
+  color: var(--text-muted);
+}
+
+.progress-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+  gap: 0.6rem;
+}
+
+.progress-stat {
+  background: var(--bg);
+  border-radius: 10px;
+  padding: 0.6rem;
+  text-align: center;
+}
+
+.progress-stat-value {
+  display: block;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--accent-dark);
+}
+
+.progress-stat-label { font-size: 0.72rem; color: var(--text-muted); }
+
+.mastery-row {
+  margin-bottom: 0.85rem;
+}
+.mastery-row:last-child { margin-bottom: 0; }
+
+.mastery-label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 0.3rem;
+}
+
+.mastery-count { font-weight: 400; color: var(--text-muted); font-size: 0.78rem; }
+.mastery-empty { font-size: 0.8rem; color: var(--text-muted); font-style: italic; }
+
+.mastery-bar {
+  display: flex;
+  height: 10px;
+  border-radius: 5px;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.mastery-seg { height: 100%; }
+
+.weak-items-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.weak-items-list li {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.9rem;
+}
+.weak-items-list li:last-child { border-bottom: none; }
+
+.weak-item-seen { color: var(--text-muted); font-size: 0.78rem; }
+.weak-item-empty { color: var(--text-muted); font-style: italic; font-size: 0.9rem; list-style: none; }
+
+.backup-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.backup-actions .primary-btn { margin-top: 0; }
