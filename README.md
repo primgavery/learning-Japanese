@@ -6,9 +6,11 @@ A small browser-based quiz app for practicing some of the hardest parts of
 Japanese for Spanish/English speakers: **kana** (hiragana/katakana),
 **numbers** (up to 99,999), **counters (助数詞)** — the different words
 Japanese uses depending on what you're counting (人 for people, 本 for long
-thin objects, 匹 for small animals, 枚 for flat objects, and so on), and
-**telling time** (何時何分), including the sound changes (gemination, h→p/b,
-irregular hour readings, etc.) that go with all of them.
+thin objects, 匹 for small animals, 枚 for flat objects, and so on),
+**telling time** (何時何分), **dates** (何月何日 — arguably the single most
+irregular-word-dense thing in the language), and a first set of
+**greetings & phrases** — including the sound changes (gemination, h→p/b,
+irregular hour/month/day readings, etc.) that go with all of them.
 
 No build step, no dependencies — it's plain HTML/CSS/JS.
 
@@ -43,7 +45,18 @@ python3 -m http.server 8080
 - **Time mode** — practice telling time in 5-minute increments, including
   the irregular hour readings (4時=よじ, 7時=しちじ, 9時=くじ — none of
   which follow the normal digit series) and はん for the half hour.
-- **Mixed mode** — draws from all three.
+- **Date mode** — months (with their own 4/7/9 irregulars: 4月=しがつ,
+  7月=しちがつ, 9月=くがつ), days of the week, and days of the month — where
+  1st–10th, 14th, 20th, and 24th are old native-Japanese words with *no*
+  relation to the regular digit series at all (1日=ついたち, 20日=はつか...).
+  Practices the month, the day, a weekday, and full dates separately so
+  mastery tracking can pin down exactly which piece is the problem.
+- **Phrases mode** — a first step past reading mechanics into usable
+  Japanese: ~20 essential greetings and set phrases. Direction is reversed
+  from every other mode on purpose — given the English situation, produce
+  the Japanese — since recognition alone doesn't get you very far with a
+  phrase you'd actually want to reach for.
+- **Mixed mode** — draws from numbers, counters, and time.
 - **Sentence mode** — wraps each prompt in a short beginner-friendly English
   sentence for context (e.g. "There are 3 pencils in the box.") instead of a
   bare flashcard fragment. Toggleable.
@@ -69,12 +82,30 @@ python3 -m http.server 8080
 
 A lightweight Leitner-box spaced-repetition system (`js/mastery.js`) tracks
 your personal accuracy on specific counters (e.g. 6本 vs 2本), specific
-hours (4時, 7時, 9時...), and specific kana — separately from real-world
-frequency. Get something wrong and it comes up far more often until you get
-it right a few times in a row; get it right repeatedly and it fades into
-occasional review instead of disappearing. It's shared between the quiz
-*and* the fishing game, so progress made in one feeds the other — miss
-6本 while fishing and it'll turn up more in the quiz too, and vice versa.
+hours, months, and days, specific kana, and specific phrases — separately
+from real-world frequency. Get something wrong and it comes up far more
+often until you get it right a few times in a row; get it right repeatedly
+and it fades into occasional review instead of disappearing. It's shared
+between the quiz *and* the fishing game, so progress made in one feeds the
+other — miss 6本 while fishing and it'll turn up more in the quiz too, and
+vice versa.
+
+### 📊 Progress tab
+
+Everything the mastery system tracks, made visible in one place:
+
+- **Overview** — quiz score/streak and fishing coins/catches/combo/day
+  streak/achievements, read live whenever you open the tab.
+- **Mastery by category** — a red→green bar per category (counters, time,
+  kana, dates, phrases) showing how many tracked items are struggling vs.
+  mastered.
+- **Focus on these** — the 8 items currently at the bottom of the Leitner
+  box, sorted by how many times you've seen them (a concrete "practice
+  these next" list, not just an abstract score).
+- **Backup** — export everything (quiz settings, fishing save, mastery
+  data) to a JSON file, and import it back — since it all otherwise lives
+  only in this browser's `localStorage` and wouldn't survive a cleared
+  cache or a new device.
 
 ### 🎣 Fishing mini-game
 
@@ -99,8 +130,8 @@ swim across tagged with a number, counter, or time (e.g. a fish labeled
   front of you. It only continues once you dismiss it, so there's no
   missing it — and no clicking through choices to find the answer, since
   the fish is already lost the moment you guess wrong.
-- **17 counters now, plus more fish variety** — added 羽 (wa/ba/pa, birds)
-  and 足 (soku, pairs of footwear) to the roster.
+- **17 counter species, plus a Clockfish** — 羽 (wa/ba/pa, birds) and 足
+  (soku, pairs of footwear) round out the roster.
 - **Rarity mirrors real-world usefulness, inverted for challenge** — common
   counters (つ, 人...) show up constantly as easy, low-value "common" fish so
   you get lots of low-stakes reps on what matters most in real life; rare

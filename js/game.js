@@ -26,11 +26,15 @@ function itemKey(q) {
   if (q.kind === 'counter') return `counter:${q.counter.id}:${q.count}`;
   if (q.kind === 'time') return `time:${q.hour}`;
   if (q.kind === 'kana') return `kana:${q.hiragana}`;
+  if (q.kind === 'date-month') return `date:month:${q.month}`;
+  if (q.kind === 'date-day') return `date:day:${q.day}`;
+  if (q.kind === 'date-weekday') return `date:weekday:${q.weekdayIndex}`;
+  if (q.kind === 'phrase') return `phrase:${q.phraseIndex}`;
   return null;
 }
 
 const Game = {
-  mode: 'numbers', // 'numbers' | 'counters' | 'time' | 'kana' | 'mixed'
+  mode: 'numbers', // 'numbers' | 'counters' | 'time' | 'kana' | 'date' | 'phrases' | 'mixed'
   numberMax: 100,
   enabledCounters: COUNTERS.map((c) => c.id),
   includeAgeIrregular: true,
@@ -130,6 +134,26 @@ const Game = {
   pickHour() {
     const entries = [];
     for (let h = 1; h <= 12; h++) entries.push({ value: h, key: `time:${h}` });
+    return Mastery.weightedPick(entries);
+  },
+
+  pickMonth() {
+    const entries = [];
+    for (let m = 1; m <= 12; m++) entries.push({ value: m, key: `date:month:${m}` });
+    return Mastery.weightedPick(entries);
+  },
+
+  // The real difficulty in dates: 1-10, 14, 20, 24 are irregular native
+  // words unrelated to the digit series, so weak days surface more often.
+  pickDay() {
+    const entries = [];
+    for (let d = 1; d <= 31; d++) entries.push({ value: d, key: `date:day:${d}` });
+    return Mastery.weightedPick(entries);
+  },
+
+  pickWeekday() {
+    const entries = [];
+    for (let i = 0; i < 7; i++) entries.push({ value: i, key: `date:weekday:${i}` });
     return Mastery.weightedPick(entries);
   },
 
@@ -244,6 +268,106 @@ const Game = {
     };
   },
 
+  // Dates mix four question types: the month alone, the day alone (where
+  // the real irregularity lives), a weekday, and an occasional full date
+  // combining month+day for realistic practice. The atomic ones (month/
+  // day/weekday) feed mastery; the combined one is just variety.
+  buildDateQuestion() {
+    const roll = Math.random();
+
+    if (roll < 0.15) {
+      const idx = this.pickWeekday();
+      const w = WEEKDAYS[idx];
+      return {
+        kind: 'date-weekday',
+        weekdayIndex: idx,
+        promptKanji: w.kanji,
+        promptLabel: 'What day of the week is this?',
+        icon: '📅',
+        accepted: [normalize(w.romaji)],
+        acceptedHiragana: [w.hiragana],
+        romaji: w.romaji,
+        hiragana: w.hiragana,
+        explanation: null,
+      };
+    }
+
+    if (roll < 0.5) {
+      const m = this.pickMonth();
+      return {
+        kind: 'date-month',
+        month: m,
+        promptKanji: `${m}月`,
+        promptLabel: 'What month is this?',
+        icon: '📅',
+        accepted: [normalize(MONTH_R[m])],
+        acceptedHiragana: [MONTH_H[m]],
+        romaji: MONTH_R[m],
+        hiragana: MONTH_H[m],
+        explanation: IRREGULAR_MONTHS.has(m)
+          ? `${m}月 is irregular — it's "${MONTH_R[m]}", not what the normal digit series would give you.`
+          : null,
+      };
+    }
+
+    if (roll < 0.85) {
+      const d = this.pickDay();
+      return {
+        kind: 'date-day',
+        day: d,
+        promptKanji: `${d}日`,
+        promptLabel: 'What day of the month is this?',
+        icon: '📅',
+        accepted: [normalize(DAY_R[d])],
+        acceptedHiragana: [DAY_H[d]],
+        romaji: DAY_R[d],
+        hiragana: DAY_H[d],
+        explanation: IRREGULAR_DAYS.has(d)
+          ? `${d}日 is one of the irregular native-Japanese day names — it doesn't follow a number+nichi pattern at all.`
+          : `Regular pattern here: the number + nichi.`,
+      };
+    }
+
+    const m = this.pickMonth();
+    const d = this.pickDay();
+    const romaji = MONTH_R[m] + DAY_R[d];
+    const hiragana = MONTH_H[m] + DAY_H[d];
+    return {
+      kind: 'date-full',
+      month: m,
+      day: d,
+      promptKanji: `${m}月${d}日`,
+      promptLabel: 'Read this date',
+      icon: '📅',
+      accepted: [normalize(romaji)],
+      acceptedHiragana: [hiragana],
+      romaji,
+      hiragana,
+      explanation: null,
+    };
+  },
+
+  // Direction reversed on purpose — English situation in, Japanese out,
+  // since production (not just recognition) is the useful skill for a
+  // phrase you'd actually reach for.
+  buildPhraseQuestion() {
+    const entries = PHRASES.map((p, i) => ({ value: i, key: `phrase:${i}` }));
+    const idx = Mastery.weightedPick(entries);
+    const p = PHRASES[idx];
+    return {
+      kind: 'phrase',
+      phraseIndex: idx,
+      promptKanji: p.en,
+      promptLabel: 'How do you say this in Japanese?',
+      icon: '💬',
+      accepted: [normalize(p.romaji)],
+      acceptedHiragana: [p.hiragana],
+      romaji: p.romaji,
+      hiragana: p.hiragana,
+      explanation: null,
+    };
+  },
+
   buildChoices(question) {
     // Build 3 plausible wrong answers + the correct one, shuffled.
     const wrongPool = new Set();
@@ -285,6 +409,37 @@ const Game = {
         const alt = KANA_CHART[this.randInt(0, KANA_CHART.length - 1)];
         if (normalize(alt.romaji) !== correctRomaji) wrongPool.add(alt.romaji);
       }
+    } else if (question.kind === 'date-month') {
+      for (let m = 1; m <= 12; m++) {
+        if (m !== question.month) wrongPool.add(MONTH_R[m]);
+      }
+    } else if (question.kind === 'date-day') {
+      let guard = 0;
+      while (wrongPool.size < 3 && guard < 40) {
+        guard++;
+        const d = this.randInt(1, 31);
+        if (d !== question.day) wrongPool.add(DAY_R[d]);
+      }
+    } else if (question.kind === 'date-weekday') {
+      WEEKDAYS.forEach((w, i) => {
+        if (i !== question.weekdayIndex) wrongPool.add(w.romaji);
+      });
+    } else if (question.kind === 'date-full') {
+      let guard = 0;
+      while (wrongPool.size < 3 && guard < 40) {
+        guard++;
+        const m = this.randInt(1, 12);
+        const d = this.randInt(1, 31);
+        if (m === question.month && d === question.day) continue;
+        wrongPool.add(MONTH_R[m] + DAY_R[d]);
+      }
+    } else if (question.kind === 'phrase') {
+      let guard = 0;
+      while (wrongPool.size < 3 && guard < 40) {
+        guard++;
+        const p = PHRASES[this.randInt(0, PHRASES.length - 1)];
+        if (normalize(p.romaji) !== correctRomaji) wrongPool.add(p.romaji);
+      }
     } else {
       // numbers: perturb the target number a bit for near-miss distractors
       const n = parseInt(question.promptKanji.replace(/,/g, ''), 10);
@@ -316,6 +471,8 @@ const Game = {
     if (kind === 'numbers') this.current = this.buildNumberQuestion();
     else if (kind === 'time') this.current = this.buildTimeQuestion();
     else if (kind === 'kana') this.current = this.buildKanaQuestion();
+    else if (kind === 'date') this.current = this.buildDateQuestion();
+    else if (kind === 'phrases') this.current = this.buildPhraseQuestion();
     else this.current = this.buildCounterQuestion();
 
     if (this.multipleChoice) {

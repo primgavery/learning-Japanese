@@ -13,6 +13,7 @@
     <nav class="tabs" id="tabs">
       <button class="tab-btn active" data-tab="quiz">Quiz</button>
       <button class="tab-btn" data-tab="fishing">🎣 Fishing</button>
+      <button class="tab-btn" data-tab="progress">📊 Progress</button>
       <button class="tab-btn" data-tab="reference">Reference</button>
     </nav>
   </header>
@@ -33,7 +34,9 @@
             <button data-mode="numbers" class="active">🔢 Numbers</button>
             <button data-mode="counters">📦 Counters</button>
             <button data-mode="time">🕒 Time</button>
+            <button data-mode="date">📅 Date</button>
             <button data-mode="kana">🈴 Kana</button>
+            <button data-mode="phrases">💬 Phrases</button>
             <button data-mode="mixed">🎲 Mixed</button>
           </div>
         </div>
@@ -193,6 +196,41 @@
       <div class="panel">
         <h2>Achievements</h2>
         <div class="achievement-grid" id="achievement-grid"></div>
+      </div>
+    </section>
+
+    <section id="progress-view" class="view">
+      <div class="panel">
+        <h2>Overview</h2>
+        <div class="progress-overview" id="progress-overview"></div>
+      </div>
+
+      <div class="panel">
+        <h2>Mastery by category</h2>
+        <p class="hint">
+          Every counter, hour, kana, date, and phrase you've answered is tracked separately.
+          🔴 struggling → 🟢 mastered. Missed items resurface far more often until they stick.
+        </p>
+        <div id="mastery-breakdown"></div>
+      </div>
+
+      <div class="panel">
+        <h2>Focus on these</h2>
+        <p class="hint">What's currently tripping you up most, across every mode.</p>
+        <ul class="weak-items-list" id="weak-items-list"></ul>
+      </div>
+
+      <div class="panel">
+        <h2>Backup</h2>
+        <p class="hint">
+          Everything lives only in this browser. Export a copy so it survives a cleared cache
+          or a new device — importing replaces your current progress.
+        </p>
+        <div class="backup-actions">
+          <button type="button" id="export-btn" class="primary-btn">⬇️ Export progress</button>
+          <button type="button" id="import-btn" class="secondary-btn">⬆️ Import progress</button>
+          <input type="file" id="import-input" accept="application/json" hidden />
+        </div>
       </div>
     </section>
 

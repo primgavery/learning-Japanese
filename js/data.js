@@ -560,3 +560,73 @@ const TIME_SENTENCES = [
   'The store closes at {t}.',
   'Class ends at {t}.',
 ];
+
+/* ------------------------------------------------------------------
+   Dates (何月何日 / nan-gatsu nan-nichi)
+   Months follow the familiar 4/7/9-irregular pattern (like hours), but
+   with their own distinct irregular words. Days of the month are the
+   real challenge — 1-10, 14, 20, and 24 are old native-Japanese words
+   with no relation to the regular digit series at all.
+------------------------------------------------------------------- */
+
+const MONTH_R = ['', 'ichigatsu', 'nigatsu', 'sangatsu', 'shigatsu', 'gogatsu', 'rokugatsu', 'shichigatsu', 'hachigatsu', 'kugatsu', 'juugatsu', 'juuichigatsu', 'juunigatsu'];
+const MONTH_H = ['', 'いちがつ', 'にがつ', 'さんがつ', 'しがつ', 'ごがつ', 'ろくがつ', 'しちがつ', 'はちがつ', 'くがつ', 'じゅうがつ', 'じゅういちがつ', 'じゅうにがつ'];
+const IRREGULAR_MONTHS = new Set([4, 7, 9]);
+
+const DAY_R = [
+  '', 'tsuitachi', 'futsuka', 'mikka', 'yokka', 'itsuka', 'muika', 'nanoka', 'youka', 'kokonoka', 'tooka',
+  'juuichinichi', 'juuninichi', 'juusannichi', 'juuyokka', 'juugonichi', 'juurokunichi', 'juushichinichi', 'juuhachinichi', 'juukunichi', 'hatsuka',
+  'nijuuichinichi', 'nijuuninichi', 'nijuusannichi', 'nijuuyokka', 'nijuugonichi', 'nijuurokunichi', 'nijuushichinichi', 'nijuuhachinichi', 'nijuukunichi', 'sanjuunichi',
+  'sanjuuichinichi',
+];
+const DAY_H = [
+  '', 'ついたち', 'ふつか', 'みっか', 'よっか', 'いつか', 'むいか', 'なのか', 'ようか', 'ここのか', 'とおか',
+  'じゅういちにち', 'じゅうににち', 'じゅうさんにち', 'じゅうよっか', 'じゅうごにち', 'じゅうろくにち', 'じゅうしちにち', 'じゅうはちにち', 'じゅうくにち', 'はつか',
+  'にじゅういちにち', 'にじゅうににち', 'にじゅうさんにち', 'にじゅうよっか', 'にじゅうごにち', 'にじゅうろくにち', 'にじゅうしちにち', 'にじゅうはちにち', 'にじゅうくにち', 'さんじゅうにち',
+  'さんじゅういちにち',
+];
+// The days that break from the regular X+nichi pattern entirely.
+const IRREGULAR_DAYS = new Set([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 14, 20, 24]);
+
+const WEEKDAYS = [
+  { en: 'Monday', romaji: 'getsuyoubi', hiragana: 'げつようび', kanji: '月曜日' },
+  { en: 'Tuesday', romaji: 'kayoubi', hiragana: 'かようび', kanji: '火曜日' },
+  { en: 'Wednesday', romaji: 'suiyoubi', hiragana: 'すいようび', kanji: '水曜日' },
+  { en: 'Thursday', romaji: 'mokuyoubi', hiragana: 'もくようび', kanji: '木曜日' },
+  { en: 'Friday', romaji: "kin'youbi", hiragana: 'きんようび', kanji: '金曜日' },
+  { en: 'Saturday', romaji: 'doyoubi', hiragana: 'どようび', kanji: '土曜日' },
+  { en: 'Sunday', romaji: 'nichiyoubi', hiragana: 'にちようび', kanji: '日曜日' },
+];
+
+/* ------------------------------------------------------------------
+   Essential greetings & phrases — a first step from "reading mechanics"
+   into actual usable Japanese. Direction is reversed from every other
+   mode here on purpose: given the English situation, produce the
+   Japanese, since that's the useful direction for a phrase you'd reach
+   for in conversation (recognition-only doesn't get you very far).
+------------------------------------------------------------------- */
+
+const PHRASES = [
+  { en: 'Hello / good afternoon', romaji: 'konnichiwa', hiragana: 'こんにちは' },
+  { en: 'Good morning', romaji: 'ohayou gozaimasu', hiragana: 'おはようございます' },
+  { en: 'Good evening', romaji: 'konbanwa', hiragana: 'こんばんは' },
+  { en: 'Good night', romaji: 'oyasuminasai', hiragana: 'おやすみなさい' },
+  { en: 'Goodbye', romaji: 'sayounara', hiragana: 'さようなら' },
+  { en: 'Thank you', romaji: 'arigatou gozaimasu', hiragana: 'ありがとうございます' },
+  { en: "You're welcome", romaji: 'dou itashimashite', hiragana: 'どういたしまして' },
+  { en: 'Excuse me / I\'m sorry', romaji: 'sumimasen', hiragana: 'すみません' },
+  { en: 'Please (asking for something)', romaji: 'onegaishimasu', hiragana: 'おねがいします' },
+  { en: 'Nice to meet you', romaji: 'hajimemashite', hiragana: 'はじめまして' },
+  { en: 'Yes', romaji: 'hai', hiragana: 'はい' },
+  { en: 'No', romaji: 'iie', hiragana: 'いいえ' },
+  { en: 'How are you?', romaji: 'genki desu ka', hiragana: 'げんきですか' },
+  { en: "I don't understand", romaji: 'wakarimasen', hiragana: 'わかりません' },
+  { en: 'Where is the bathroom?', romaji: 'toire wa doko desu ka', hiragana: 'トイレはどこですか' },
+  { en: 'How much is it?', romaji: 'ikura desu ka', hiragana: 'いくらですか' },
+  { en: 'Said before eating', romaji: 'itadakimasu', hiragana: 'いただきます' },
+  { en: 'Said after eating', romaji: 'gochisousama deshita', hiragana: 'ごちそうさまでした' },
+  { en: "Said leaving home ('I'm off')", romaji: 'ittekimasu', hiragana: 'いってきます' },
+  { en: "Said to someone leaving ('see you later')", romaji: 'itterasshai', hiragana: 'いってらっしゃい' },
+  { en: "Said arriving home ('I'm back')", romaji: 'tadaima', hiragana: 'ただいま' },
+  { en: "Said to someone arriving home ('welcome back')", romaji: 'okaeri', hiragana: 'おかえり' },
+];
