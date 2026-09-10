@@ -33,6 +33,7 @@
             <button data-mode="numbers" class="active">🔢 Numbers</button>
             <button data-mode="counters">📦 Counters</button>
             <button data-mode="time">🕒 Time</button>
+            <button data-mode="kana">🈴 Kana</button>
             <button data-mode="mixed">🎲 Mixed</button>
           </div>
         </div>
@@ -46,6 +47,15 @@
             <option value="10000">1 – 10,000</option>
             <option value="99999">1 – 99,999</option>
           </select>
+        </div>
+
+        <div class="settings-row" id="kana-system-row">
+          <label class="settings-label">Kana</label>
+          <div class="segmented" id="kana-system-select">
+            <button data-system="hiragana" class="active">ひらがな Hiragana</button>
+            <button data-system="katakana">カタカナ Katakana</button>
+            <button data-system="both">🔀 Both</button>
+          </div>
         </div>
 
         <div class="settings-row" id="counter-select-row">
@@ -118,6 +128,7 @@
         <div class="fishing-stat"><span class="fishing-stat-value" id="fish-caught-total">0</span><span class="fishing-stat-label">Fish caught</span></div>
         <div class="fishing-stat"><span class="fishing-stat-value" id="fish-combo">0</span><span class="fishing-stat-label">Combo</span></div>
         <div class="fishing-stat"><span class="fishing-stat-value" id="fish-best-combo">0</span><span class="fishing-stat-label">Best combo</span></div>
+        <div class="fishing-stat"><span class="fishing-stat-value" id="fish-day-streak">🔥0</span><span class="fishing-stat-label">Day streak</span></div>
       </div>
 
       <div class="panel">
@@ -134,6 +145,8 @@
           <span>Multiple choice (recommended while you're still learning readings)</span>
         </label>
       </div>
+
+      <div class="achievement-toast" id="achievement-toast" hidden></div>
 
       <div class="panel pond-panel">
         <div class="pond" id="pond"></div>
@@ -176,9 +189,24 @@
         <p class="hint">Every counter has a matching fish. Catch one to reveal it here.</p>
         <div class="collection-grid" id="collection-grid"></div>
       </div>
+
+      <div class="panel">
+        <h2>Achievements</h2>
+        <div class="achievement-grid" id="achievement-grid"></div>
+      </div>
     </section>
 
     <section id="reference-view" class="view">
+      <div class="panel">
+        <h2>Kana chart (ひらがな・カタカナ)</h2>
+        <p class="hint">
+          Every reading in this app is spelled out with these. Worth learning before anything
+          else — once you can read hiragana and katakana, everything else here gets a lot
+          easier. Practice them in the Quiz tab's Kana mode.
+        </p>
+        <div id="kana-reference"></div>
+      </div>
+
       <div class="panel">
         <h2>Number building blocks</h2>
         <p class="hint">
@@ -232,6 +260,8 @@
 
   <script src="js/romaji.js"></script>
   <script src="js/data.js"></script>
+  <script src="js/kana.js"></script>
+  <script src="js/mastery.js"></script>
   <script src="js/game.js"></script>
   <script src="js/main.js"></script>
   <script src="js/fishing.js"></script>

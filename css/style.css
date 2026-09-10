@@ -157,28 +157,26 @@ main {
 }
 
 .segmented {
-  display: inline-flex;
+  display: flex;
   flex-wrap: wrap;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  overflow: hidden;
+  gap: 0.4rem;
 }
 
 .segmented button {
-  border: none;
+  border: 1px solid var(--border);
+  border-radius: 8px;
   background: var(--surface);
   color: var(--text);
   padding: 0.55rem 1rem;
   cursor: pointer;
   font-size: 0.9rem;
-  border-right: 1px solid var(--border);
-  transition: background 0.15s ease, color 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
   white-space: nowrap;
 }
-.segmented button:last-child { border-right: none; }
-.segmented button:hover:not(.active) { background: var(--bg); }
+.segmented button:hover:not(.active) { background: var(--bg); border-color: var(--accent); }
 .segmented button.active {
   background: var(--accent);
+  border-color: var(--accent);
   color: #fff;
 }
 
@@ -442,6 +440,45 @@ select {
   font-size: 0.9rem;
 }
 
+.kana-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-top: 0.75rem;
+}
+
+.kana-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.3rem;
+}
+
+.kana-row-youon { grid-template-columns: repeat(3, 1fr); }
+
+.kana-cell {
+  background: var(--bg);
+  border-radius: 8px;
+  padding: 0.4rem 0.2rem;
+  text-align: center;
+}
+
+.kana-cell-empty { background: transparent; }
+
+.kana-glyphs {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.kana-romaji {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.kana-subheading {
+  font-size: 0.95rem;
+  margin: 1rem 0 0;
+}
+
 .counter-ref-card {
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -510,7 +547,7 @@ select {
 
 .fishing-topbar {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
   gap: 0.75rem;
   margin-bottom: 1.25rem;
 }
@@ -850,6 +887,42 @@ select {
 .collection-meaning { font-size: 0.72rem; color: var(--text-muted); margin: 0.2rem 0; }
 .collection-tier { font-size: 0.72rem; color: var(--text-muted); margin-top: 0.3rem; }
 .collection-count { font-size: 0.75rem; color: var(--accent-dark); font-weight: 600; }
+
+.achievement-toast {
+  background: var(--accent2);
+  color: #fff;
+  border-radius: var(--radius);
+  padding: 0.75rem 1rem;
+  text-align: center;
+  font-weight: 700;
+  margin-bottom: 1.25rem;
+  box-shadow: var(--shadow);
+}
+
+.achievement-toast.toast-pop {
+  animation: fade-up 0.3s ease;
+}
+
+.achievement-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 0.6rem;
+}
+
+.achievement-card {
+  border-radius: var(--radius);
+  padding: 0.75rem;
+  text-align: center;
+  border: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.achievement-card.locked { opacity: 0.5; }
+.achievement-card.unlocked { background: var(--accent-soft); border-color: var(--accent); }
+
+.achievement-icon { font-size: 1.6rem; }
+.achievement-label { font-weight: 700; font-size: 0.82rem; margin-top: 0.3rem; }
+.achievement-desc { font-size: 0.72rem; color: var(--text-muted); margin-top: 0.2rem; }
 
 @media (max-width: 520px) {
   .fishing-topbar { grid-template-columns: repeat(2, 1fr); }

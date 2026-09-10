@@ -56,6 +56,32 @@ function upgradeCost(key, level) {
   return Math.round(UPGRADE_DEFS[key].baseCost * Math.pow(1.6, level));
 }
 
+const ACHIEVEMENTS = [
+  { id: 'first_catch', icon: '🎣', label: 'First Catch', desc: 'Catch your first fish.', check: (s) => s.totalCaught >= 1 },
+  { id: 'ten_catches', icon: '🐟', label: 'Getting the Hang of It', desc: 'Catch 10 fish.', check: (s) => s.totalCaught >= 10 },
+  { id: 'fifty_catches', icon: '🐠', label: 'Seasoned Angler', desc: 'Catch 50 fish.', check: (s) => s.totalCaught >= 50 },
+  { id: 'hundred_catches', icon: '🎖️', label: 'Master Angler', desc: 'Catch 100 fish.', check: (s) => s.totalCaught >= 100 },
+  { id: 'combo5', icon: '🔥', label: 'On a Roll', desc: 'Reach a combo of 5.', check: (s) => s.bestCombo >= 5 },
+  { id: 'combo10', icon: '⚡', label: 'Unstoppable', desc: 'Reach a combo of 10.', check: (s) => s.bestCombo >= 10 },
+  {
+    id: 'epic_catch',
+    icon: '🌟',
+    label: 'Rare Find',
+    desc: 'Catch an Epic-tier fish.',
+    check: (s) =>
+      FISH_SPECIES.some((sp) => sp.tier === 'epic' && (s.collection[sp.id] || 0) > 0),
+  },
+  {
+    id: 'full_collection',
+    icon: '📖',
+    label: 'Completionist',
+    desc: 'Catch every species at least once.',
+    check: (s) => FISH_SPECIES.every((sp) => (s.collection[sp.id] || 0) > 0),
+  },
+  { id: 'streak3', icon: '📅', label: 'Habit Forming', desc: 'Fish 3 days in a row.', check: (s) => (s.dayStreak || 0) >= 3 },
+  { id: 'streak7', icon: '🗓️', label: 'Weekly Regular', desc: 'Fish 7 days in a row.', check: (s) => (s.dayStreak || 0) >= 7 },
+];
+
 const FishingState = {
   coins: 0,
   upgrades: { bait: 0, net: 0, charm: 0 },
@@ -70,6 +96,10 @@ const FishingState = {
   // more realistic ask for someone who hasn't learned it yet than free
   // recall. Typing it out is there for once you're ready for the challenge.
   multipleChoice: true,
+  dayStreak: 0,
+  bestDayStreak: 0,
+  lastPlayedDate: null,
+  unlocked: {},
 
   load() {
     try {
@@ -80,6 +110,10 @@ const FishingState = {
       if (typeof saved.totalCaught === 'number') this.totalCaught = saved.totalCaught;
       if (typeof saved.bestCombo === 'number') this.bestCombo = saved.bestCombo;
       if (typeof saved.multipleChoice === 'boolean') this.multipleChoice = saved.multipleChoice;
+      if (typeof saved.dayStreak === 'number') this.dayStreak = saved.dayStreak;
+      if (typeof saved.bestDayStreak === 'number') this.bestDayStreak = saved.bestDayStreak;
+      if (saved.lastPlayedDate) this.lastPlayedDate = saved.lastPlayedDate;
+      if (saved.unlocked) this.unlocked = saved.unlocked;
     } catch (e) {
       /* ignore corrupt storage */
     }
@@ -95,6 +129,10 @@ const FishingState = {
         totalCaught: this.totalCaught,
         bestCombo: this.bestCombo,
         multipleChoice: this.multipleChoice,
+        dayStreak: this.dayStreak,
+        bestDayStreak: this.bestDayStreak,
+        lastPlayedDate: this.lastPlayedDate,
+        unlocked: this.unlocked,
       })
     );
   },
@@ -360,6 +398,7 @@ function handleDontKnow() {
 // — you don't get to try again, only the lesson you just saw.
 function handleMiss(fish) {
   if (fish.caught) return;
+  Mastery.record(itemKey(fish.question), false);
 
   const idx = FishingState.fishes.findIndex((f) => f.id === fish.id);
   if (idx !== -1) FishingState.fishes.splice(idx, 1);
@@ -398,6 +437,7 @@ function handleEscape(id) {
 function handleCatch(fish) {
   if (fish.caught || fish.locked) return;
   fish.caught = true;
+  Mastery.record(itemKey(fish.question), true);
   const multiplier = 1 + Math.min(FishingState.combo, 10) * 0.05;
   const coinsEarned = Math.round(fish.coinValue * multiplier);
 
@@ -427,6 +467,7 @@ function handleCatch(fish) {
   updateStatsUI();
   renderShop();
   if (fish.spec.kind !== 'number') renderCollection();
+  checkAchievements();
 }
 
 function spawnCoinFloat(fishElement, amount) {
@@ -463,6 +504,7 @@ function updateStatsUI() {
   document.getElementById('fish-caught-total').textContent = FishingState.totalCaught;
   document.getElementById('fish-combo').textContent = FishingState.combo;
   document.getElementById('fish-best-combo').textContent = FishingState.bestCombo;
+  document.getElementById('fish-day-streak').textContent = `🔥${FishingState.dayStreak}`;
 }
 
 function renderShop() {
@@ -533,6 +575,74 @@ function renderCollection() {
   }).join('');
 }
 
+function renderAchievements() {
+  const grid = document.getElementById('achievement-grid');
+  if (!grid) return;
+  grid.innerHTML = ACHIEVEMENTS.map((a) => {
+    const unlocked = !!FishingState.unlocked[a.id];
+    return `
+      <div class="achievement-card ${unlocked ? 'unlocked' : 'locked'}">
+        <div class="achievement-icon">${unlocked ? a.icon : '🔒'}</div>
+        <div class="achievement-label">${a.label}</div>
+        <div class="achievement-desc">${a.desc}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+let achievementToastTimer = null;
+
+function showAchievementToast(achievement) {
+  const toast = document.getElementById('achievement-toast');
+  if (!toast) return;
+  toast.textContent = `🏆 Achievement unlocked: ${achievement.icon} ${achievement.label}`;
+  toast.hidden = false;
+  toast.classList.remove('toast-pop');
+  void toast.offsetWidth; // restart animation
+  toast.classList.add('toast-pop');
+  clearTimeout(achievementToastTimer);
+  achievementToastTimer = setTimeout(() => {
+    toast.hidden = true;
+  }, 3200);
+}
+
+function checkAchievements() {
+  let changed = false;
+  ACHIEVEMENTS.forEach((a) => {
+    if (!FishingState.unlocked[a.id] && a.check(FishingState)) {
+      FishingState.unlocked[a.id] = true;
+      changed = true;
+      showAchievementToast(a);
+    }
+  });
+  if (changed) {
+    FishingState.save();
+    renderAchievements();
+  }
+}
+
+// A streak of consecutive calendar days you've opened the fishing tab —
+// separate from the in-game catch combo. Idempotent: calling it again the
+// same day is a no-op, so it's safe to call every time the tab is opened.
+function checkDailyStreak() {
+  const today = new Date().toISOString().slice(0, 10);
+  if (FishingState.lastPlayedDate === today) return;
+
+  if (FishingState.lastPlayedDate) {
+    const prev = new Date(`${FishingState.lastPlayedDate}T00:00:00`);
+    const cur = new Date(`${today}T00:00:00`);
+    const diffDays = Math.round((cur - prev) / 86400000);
+    FishingState.dayStreak = diffDays === 1 ? FishingState.dayStreak + 1 : 1;
+  } else {
+    FishingState.dayStreak = 1;
+  }
+  FishingState.lastPlayedDate = today;
+  FishingState.bestDayStreak = Math.max(FishingState.bestDayStreak, FishingState.dayStreak);
+  FishingState.save();
+  updateStatsUI();
+  checkAchievements();
+}
+
 function pauseFishing() {
   if (spawnTimer) clearInterval(spawnTimer);
   spawnTimer = null;
@@ -540,6 +650,7 @@ function pauseFishing() {
 }
 
 function resumeFishing() {
+  checkDailyStreak();
   if (!spawnTimer) {
     // Fill the pond right away instead of trickling in one fish per tick —
     // with multiple fish now the default, the game should feel busy the
@@ -563,6 +674,8 @@ function initFishing() {
   updateStatsUI();
   renderShop();
   renderCollection();
+  renderAchievements();
+  checkAchievements(); // backfills achievements for existing progress
 
   const mcToggle = document.getElementById('fish-mc-toggle');
   mcToggle.checked = FishingState.multipleChoice;

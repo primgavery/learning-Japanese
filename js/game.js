@@ -19,12 +19,23 @@ function fillTemplate(template, value) {
   return template.replace('{n}', value).replace('{t}', value);
 }
 
+// Canonical mastery key for a question — null for plain numbers, since
+// tracking every possible number individually isn't meaningful (the skill
+// there is computing the reading, not memorizing a specific item).
+function itemKey(q) {
+  if (q.kind === 'counter') return `counter:${q.counter.id}:${q.count}`;
+  if (q.kind === 'time') return `time:${q.hour}`;
+  if (q.kind === 'kana') return `kana:${q.hiragana}`;
+  return null;
+}
+
 const Game = {
-  mode: 'numbers', // 'numbers' | 'counters' | 'time' | 'mixed'
+  mode: 'numbers', // 'numbers' | 'counters' | 'time' | 'kana' | 'mixed'
   numberMax: 100,
   enabledCounters: COUNTERS.map((c) => c.id),
   includeAgeIrregular: true,
   multipleChoice: false,
+  kanaSystem: 'hiragana', // 'hiragana' | 'katakana' | 'both'
   sentenceMode: true,
   prioritizeCommon: true,
 
@@ -45,6 +56,7 @@ const Game = {
       if (typeof saved.multipleChoice === 'boolean') this.multipleChoice = saved.multipleChoice;
       if (typeof saved.sentenceMode === 'boolean') this.sentenceMode = saved.sentenceMode;
       if (typeof saved.prioritizeCommon === 'boolean') this.prioritizeCommon = saved.prioritizeCommon;
+      if (saved.kanaSystem) this.kanaSystem = saved.kanaSystem;
       if (typeof saved.bestStreak === 'number') this.bestStreak = saved.bestStreak;
     } catch (e) {
       /* ignore corrupt storage */
@@ -61,6 +73,7 @@ const Game = {
         multipleChoice: this.multipleChoice,
         sentenceMode: this.sentenceMode,
         prioritizeCommon: this.prioritizeCommon,
+        kanaSystem: this.kanaSystem,
         bestStreak: this.bestStreak,
       })
     );
@@ -99,6 +112,27 @@ const Game = {
     return counters[counters.length - 1];
   },
 
+  // Within a chosen counter, which count (1-10, or the irregular 20) comes
+  // up is weighted toward whatever you personally get wrong most — the
+  // same Leitner-box mastery tracking used by fishing and kana practice.
+  pickCount(counter) {
+    const useIrregular20 =
+      counter.irregular20 && this.includeAgeIrregular && Math.random() < 0.15;
+    if (useIrregular20) return 20;
+
+    const entries = [];
+    for (let c = 1; c <= 10; c++) entries.push({ value: c, key: `counter:${counter.id}:${c}` });
+    return Mastery.weightedPick(entries);
+  },
+
+  // Same idea for hours — this is where the real difficulty lives (the
+  // irregular 4/7/9時 readings), so weak hours come up more often.
+  pickHour() {
+    const entries = [];
+    for (let h = 1; h <= 12; h++) entries.push({ value: h, key: `time:${h}` });
+    return Mastery.weightedPick(entries);
+  },
+
   buildNumberQuestion() {
     const n = this.randInt(1, this.numberMax);
     const reading = numberToReading(n);
@@ -128,17 +162,8 @@ const Game = {
   // quiz (which picks the counter itself) and the fishing game (which picks
   // a counter per fish species).
   buildCounterQuestionFor(counter) {
-    const useIrregular20 =
-      counter.irregular20 && this.includeAgeIrregular && Math.random() < 0.15;
-
-    let count, reading;
-    if (useIrregular20) {
-      count = 20;
-      reading = counter.irregular20;
-    } else {
-      count = this.randInt(1, 10);
-      reading = counter.readings[count - 1];
-    }
+    const count = this.pickCount(counter);
+    const reading = count === 20 ? counter.irregular20 : counter.readings[count - 1];
 
     const q = {
       kind: 'counter',
@@ -160,7 +185,7 @@ const Game = {
   },
 
   buildTimeQuestion() {
-    const hour = this.randInt(1, 12);
+    const hour = this.pickHour();
     const minute = PRACTICE_MINUTES[this.randInt(0, PRACTICE_MINUTES.length - 1)];
     const reading = timeToReading(hour, minute);
 
@@ -200,6 +225,25 @@ const Game = {
     return q;
   },
 
+  buildKanaQuestion() {
+    const entries = KANA_CHART.map((e) => ({ value: e, key: `kana:${e.hiragana}` }));
+    const entry = Mastery.weightedPick(entries);
+    const system = this.kanaSystem === 'both' ? (Math.random() < 0.5 ? 'hiragana' : 'katakana') : this.kanaSystem;
+    const promptChar = system === 'katakana' ? entry.katakana : entry.hiragana;
+
+    return {
+      kind: 'kana',
+      promptKanji: promptChar,
+      promptLabel: `${system === 'katakana' ? 'Katakana' : 'Hiragana'} — what sound is this?`,
+      icon: '🈴',
+      accepted: [normalize(entry.romaji)],
+      acceptedHiragana: [entry.hiragana],
+      romaji: entry.romaji,
+      hiragana: entry.hiragana,
+      explanation: null,
+    };
+  },
+
   buildChoices(question) {
     // Build 3 plausible wrong answers + the correct one, shuffled.
     const wrongPool = new Set();
@@ -232,6 +276,15 @@ const Game = {
         if (randHour === hour && randMinute === minute) continue;
         wrongPool.add(timeToReading(randHour, randMinute).romaji);
       }
+    } else if (question.kind === 'kana') {
+      // other kana, preferring ones that look or sound similar so the
+      // choice actually tests recognition rather than being a free pick
+      let guard = 0;
+      while (wrongPool.size < 3 && guard < 30) {
+        guard++;
+        const alt = KANA_CHART[this.randInt(0, KANA_CHART.length - 1)];
+        if (normalize(alt.romaji) !== correctRomaji) wrongPool.add(alt.romaji);
+      }
     } else {
       // numbers: perturb the target number a bit for near-miss distractors
       const n = parseInt(question.promptKanji.replace(/,/g, ''), 10);
@@ -262,6 +315,7 @@ const Game = {
 
     if (kind === 'numbers') this.current = this.buildNumberQuestion();
     else if (kind === 'time') this.current = this.buildTimeQuestion();
+    else if (kind === 'kana') this.current = this.buildKanaQuestion();
     else this.current = this.buildCounterQuestion();
 
     if (this.multipleChoice) {
@@ -287,6 +341,7 @@ const Game = {
     if (!q) return null;
 
     const correct = this.checkAnswer(rawAnswer, q);
+    Mastery.record(itemKey(q), correct);
 
     this.answered++;
     if (correct) {
