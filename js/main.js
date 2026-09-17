@@ -51,6 +51,7 @@ function updateSettingsVisibility() {
   el('counter-select-row').style.display = showCounters ? '' : 'none';
   el('prioritize-row').style.display = showCounters ? '' : 'none';
   el('kana-system-row').style.display = showKana ? '' : 'none';
+  el('speedrun-row').style.display = showKana ? '' : 'none';
 }
 
 function initKanaSystemSelect() {

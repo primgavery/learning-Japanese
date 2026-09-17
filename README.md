@@ -31,6 +31,12 @@ python3 -m http.server 8080
   programmatically from hiragana (they're a fixed Unicode offset apart)
   rather than hand-duplicated, so there's one source of truth for every
   reading in the app.
+- **⚡ Hiragana speed run** — a distinct timed challenge from within Kana
+  mode: all 104 hiragana, once each, shuffled, typed one after another with
+  no going back to fix a wrong one. Finishes with your time (a personal
+  best is tracked), your score, and a list of exactly what you missed and
+  what you typed — then a single review pass through just the misses
+  before you're free to run it again.
 - **Numbers mode** — practice reading numbers 1–20 up through 1–99,999.
   Readings (romaji + hiragana) are generated algorithmically, including the
   irregular sound changes (100=ひゃく not いちひゃく, 300=さんびゃく,
@@ -166,4 +172,5 @@ js/mastery.js       shared Leitner-box mastery tracking
 js/game.js         quiz engine (question generation, weighted selection, grading, scoring)
 js/main.js         DOM wiring for the quiz/reference tabs
 js/fishing.js       fishing mini-game (spawning, catching, shop, collection, streaks, achievements)
+js/speedrun.js       hiragana speed run (timed full-deck run, miss review, best time)
 ```
