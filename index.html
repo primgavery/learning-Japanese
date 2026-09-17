@@ -61,6 +61,16 @@
           </div>
         </div>
 
+        <div class="settings-row" id="speedrun-row">
+          <label class="settings-label">Speed run</label>
+          <p class="hint">
+            Every hiragana, once each, in random order. Type the romaji and hit Enter — no
+            going back to fix a wrong one. Review your misses at the end, then go again.
+          </p>
+          <button type="button" id="start-speedrun-btn" class="secondary-btn">⚡ Start hiragana speed run</button>
+          <div class="hint" id="speedrun-best"></div>
+        </div>
+
         <div class="settings-row" id="counter-select-row">
           <label class="settings-label">Counters to practice <span class="hint">(sorted by how common they are)</span></label>
           <div class="counter-chip-list" id="counter-chip-list"></div>
@@ -122,6 +132,42 @@
       <div class="panel missed-panel" id="missed-panel" hidden>
         <h2>Review — recently missed</h2>
         <ul id="missed-list"></ul>
+      </div>
+
+      <div class="panel speedrun-card" id="speedrun-panel" hidden>
+        <div class="speedrun-header">
+          <button type="button" id="cancel-speedrun-btn" class="link-btn">✕ cancel</button>
+          <span id="speedrun-progress">1 / 104</span>
+          <span id="speedrun-timer">0.0s</span>
+        </div>
+        <div class="quiz-prompt" id="speedrun-prompt">あ</div>
+        <form id="speedrun-form" class="answer-form">
+          <input
+            type="text"
+            id="speedrun-input"
+            autocomplete="off"
+            autocapitalize="off"
+            spellcheck="false"
+            placeholder="type the romaji"
+          />
+          <button type="submit">→</button>
+        </form>
+        <div class="hiragana-preview" id="speedrun-hiragana-preview">&nbsp;</div>
+      </div>
+
+      <div class="panel speedrun-results" id="speedrun-results" hidden>
+        <h2 id="speedrun-results-title">Speed run complete!</h2>
+        <div class="speedrun-stats">
+          <div class="progress-stat"><span class="progress-stat-value" id="result-time">0.0s</span><span class="progress-stat-label">Time</span></div>
+          <div class="progress-stat"><span class="progress-stat-value" id="result-score">0/0</span><span class="progress-stat-label">Correct</span></div>
+        </div>
+        <div id="speedrun-best-banner" class="fishing-message good"></div>
+        <div id="speedrun-missed-review"></div>
+        <div class="backup-actions">
+          <button type="button" id="review-missed-btn" class="primary-btn" hidden>Review misses →</button>
+          <button type="button" id="new-speedrun-btn" class="secondary-btn">⚡ New speed run</button>
+          <button type="button" id="exit-speedrun-btn" class="secondary-btn">← Back to practice</button>
+        </div>
       </div>
     </section>
 
@@ -303,5 +349,6 @@
   <script src="js/game.js"></script>
   <script src="js/main.js"></script>
   <script src="js/fishing.js"></script>
+  <script src="js/speedrun.js"></script>
 </body>
 </html>

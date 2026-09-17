@@ -1029,3 +1029,65 @@ select {
   flex-wrap: wrap;
 }
 .backup-actions .primary-btn { margin-top: 0; }
+
+/* ------------------------------------------------------------------
+   Hiragana speed run
+------------------------------------------------------------------- */
+
+.speedrun-card { text-align: center; }
+
+.speedrun-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+}
+
+.speedrun-header #speedrun-timer {
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--accent-dark);
+}
+
+#speedrun-input.flash-correct {
+  border-color: var(--good);
+  animation: flash-good 0.3s ease;
+}
+#speedrun-input.flash-incorrect {
+  border-color: var(--bad);
+  animation: flash-bad 0.3s ease;
+}
+
+@keyframes flash-good {
+  0% { background: var(--good-soft); }
+  100% { background: var(--bg); }
+}
+@keyframes flash-bad {
+  0% { background: var(--bad-soft); }
+  100% { background: var(--bg); }
+}
+
+.speedrun-results { text-align: center; }
+
+.speedrun-stats {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+.speedrun-stats .progress-stat { min-width: 100px; }
+
+.speedrun-results .fishing-message {
+  margin: 0 0 1rem;
+}
+
+#speedrun-missed-review {
+  text-align: left;
+  max-width: 420px;
+  margin: 0 auto 1rem;
+}
+#speedrun-missed-review h3 { font-size: 0.95rem; margin: 0 0 0.5rem; }
+
+.speedrun-results .backup-actions { justify-content: center; }
